@@ -1,0 +1,10 @@
+{
+  "profiles": {
+    "BangSimulator": {
+      "commandName": "Project"
+    },
+    "Container (Dockerfile)": {
+      "commandName": "Docker"
+    }
+  }
+}
