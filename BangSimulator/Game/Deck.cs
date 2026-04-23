@@ -1,15 +1,29 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
+using Microsoft.Extensions.Configuration;
 
 namespace BangSimulator.Game
 {
     public class Deck
     {
+        private static int MemSize;
+
+        static Deck()
+        {
+            var configuration = new ConfigurationBuilder()
+                .SetBasePath(Directory.GetCurrentDirectory())
+                .AddJsonFile("GameConfig.json", optional: false, reloadOnChange: true)
+                .Build();
+
+            MemSize = configuration.GetValue<int>("MemSize");
+        }
+
+
         private Stack<Card> deck;
         private List<Card> discardPile;
 
-        public LinkedList<(Card plaied, int pId)> DeckMemory { get; set; } = [];
+        public LinkedList<(Card plaied, int pId)> DeckMemory { get; set; } = []; //TODO: add target player id
 
         public Deck()
         {
@@ -43,15 +57,15 @@ namespace BangSimulator.Game
             if (playerIndex != -1)
             {
                 DeckMemory.AddFirst((card, playerIndex));
-                if (DeckMemory.Count > 10) //TODO: configurable memory size
+                if (DeckMemory.Count > Deck.MemSize) 
                     DeckMemory.RemoveLast();
             }
         }
 
         private void ShuffleFromDiscard()
         {
-            var rnd = new Random(); //TODO: fixed seed option
-            
+            Random rnd = GlobalRnd.Rnd;
+
             for (int i = discardPile.Count - 1; i > 0; i--)
             {
                 int j = rnd.Next(0, i + 1);

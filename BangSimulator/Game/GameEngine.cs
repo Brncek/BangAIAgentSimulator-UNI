@@ -12,6 +12,7 @@ namespace BangSimulator.Game
 
     public class GameEngine
     {
+
         public Player[] Players { get; set; } = [];
         public Deck Deck { get; set; } = new Deck(); 
 
@@ -140,12 +141,24 @@ namespace BangSimulator.Game
                     else
                     {
                         int nextPlayerIndex = (playerIndex + 1) % alivePlayers.Count;
-                        alivePlayers[nextPlayerIndex].InPlay.Add(dinamiteCard);
+                        alivePlayers[nextPlayerIndex].CardsInPlay.Add(dinamiteCard);
                     }
                 }
 
+                //use beer if player is damaged
+                while (player.LifePoints < player.MaxLifePoints && player.Hand.Any(c => c.Type== CardBangType.Beer))
+                {
+                    var beer = player.Hand.First(c => c.Type == CardBangType.Beer);
+                    player.Hand.Remove(beer);
+                    Deck.DiscardCard(beer, playerIndex);
+                    player.LifePoints += 1;
+                }
 
-                if(!skipTurn)
+
+                GameResoult? result = null;
+
+                //agent turns
+                if (!skipTurn)
                 {
                     for (int i = 0; i < 2; i++)
                     {
@@ -165,20 +178,29 @@ namespace BangSimulator.Game
                         gameInfo.GamePlayerLifes = Players.Select(p => p.LifePoints).ToArray();
                         gameInfo.ScherifIndex = ScheriffIndex;
                         gameInfo.DeckMemory = Deck.DeckMemory.ToArray();
-                        gameInfo.CardsOut = player.InPlay;
-                        gameInfo.AvanableActions = new List<Action>();
-                        //TODO: build AvanableActions
+                        gameInfo.CardsOut = player.CardsInPlay;
+                        gameInfo.GameState = GameState.InPlay;
+
+                        gameInfo.AvanableActions = BuildActions(playerIndex, alivePlayers, bangNotUsed);
 
                         playedAction = player.Agent.Step(gameInfo);
 
                         //TODO: play action
+
+
+                        result = CheckForWin(alivePlayers);
+                        if ( result != null)
+                            break;
                     }
+                }
+                else
+                {
+                    result = CheckForWin(alivePlayers);
                 }
 
                 playerIndex++;
                 playerIndex = playerIndex % alivePlayers.Count;
             
-                var result = CheckForWin(alivePlayers);
                 if (result != null)
                 {
                     return result;
@@ -186,11 +208,137 @@ namespace BangSimulator.Game
             }
         }
         
+        private List<Action> BuildActions(int playerIndex, List<Player> alivePlayers, bool bangNotUsed)
+        {
+
+            var player = alivePlayers[playerIndex];
+            var actions = new List<Action>();
+
+            foreach (var card in player.Hand)
+            {
+                
+                switch (card.Type)
+                {
+                    case CardBangType.Bang:
+                        {
+                            if (bangNotUsed || player.InfiniteBangs())
+                            {
+                                actions.Add(new Action
+                                {
+                                    PlayedCard = card,
+                                    PotencialTargets = GetAllPlayersInRange(playerIndex, alivePlayers, player.GetRange())
+                                });
+                            }
+                            else
+                            {
+                                actions.Add(new Action
+                                {
+                                    PlayedCard = card,
+                                    PotencialTargets = []
+                                });
+                            }
+                        }
+                        break;
+                    case CardBangType.CatBalou or CardBangType.Duel or CardBangType.Dinamite or CardBangType.Jail:
+                        { 
+                            actions.Add(new Action
+                            {
+                                PlayedCard = card,
+                                PotencialTargets = GetAllPlayersButMe(playerIndex, alivePlayers)
+                            });
+                        } break; 
+                    case CardBangType.Panic:
+                        { 
+                            actions.Add(new Action
+                            {
+                                PlayedCard = card,
+                                PotencialTargets = GetAllPlayersInRange(playerIndex, alivePlayers, 1)
+                            });
+                        } break; 
+                    case CardBangType.Missed or CardBangType.Beer:
+                        { 
+                            actions.Add(new Action
+                            {
+                                PlayedCard = card,
+                                PotencialTargets = []
+                            });
+                        } break; 
+
+                    default:
+                        {
+                            actions.Add(new Action
+                            {
+                                PlayedCard = card,
+                                PotencialTargets = [-1]
+                            });
+                        } break;
+                }
+                
+            }
+
+            foreach (var action in actions)
+            {
+                action.PotencialTargets = [.. action.PotencialTargets, -2];
+            }
+
+
+            //END TURN ACTION
+            if (player.LifePoints >= player.Hand.Count)
+            {
+                actions.Add(new Action
+                {
+                    PlayedCard = null,
+                    PotencialTargets = [-1]
+                });
+            }
+
+            return actions;
+        }
+
+        private int[] GetAllPlayersButMe(int playerIndex, List<Player> alivePlayers)
+        {
+            return alivePlayers.Select((p, i) => i).Where(i => i != playerIndex).ToArray();
+        }
+
+        private int[] GetAllPlayersInRange(int playerIndex, List<Player> alivePlayers, int range)
+        {
+            List<int> result = new List<int>();
+
+            //TO RIGHT
+            for (int i = 1; i <= range; i++)
+            {
+                int targetIndex = (playerIndex + i) % alivePlayers.Count;
+
+                if (targetIndex == playerIndex)
+                    break;
+                else if (alivePlayers[targetIndex].HasMustang() && i == range)
+                    break;
+                
+                result.Add(targetIndex);
+            }
+
+            //TO LEFT
+            for (int i = 1; i <= range; i++)
+            {
+                int targetIndex = (playerIndex - i + alivePlayers.Count) % alivePlayers.Count;
+
+                if (targetIndex == playerIndex)
+                    break;
+                else if (alivePlayers[targetIndex].HasMustang() && i == range)
+                    break;
+                else if (result.Contains(targetIndex))
+                    break;
+
+                result.Add(targetIndex);
+            }
+
+            return result.ToArray();
+        }
 
         private void PlayerDied(Player player)
         {
             player.Hand.ForEach(c => Deck.DiscardCard(c, -1));
-            player.InPlay.ForEach(c => Deck.DiscardCard(c, -1));
+            player.CardsInPlay.ForEach(c => Deck.DiscardCard(c, -1));
         }
 
         private GameResoult? CheckForWin(List<Player> alivePlayers)

@@ -2,12 +2,17 @@
 using System.Collections.Generic;
 using System.Text;
 using BangSimulator.Agent.Model;
+using BangSimulator.Game;
 
 namespace BangSimulator.Agent
 {
     internal class RandomAgent : IAgent
     {
-        private static Random random = new Random(); //TODO: add seed
+        private static Random random = GlobalRnd.Rnd;
+
+        public void GameOver(GameResoult result)
+        {
+        }
 
         public void Reset()
         {

@@ -10,7 +10,7 @@ namespace BangSimulator.Game
     public class Player
     {
         public List<Card> Hand { get; set; } = [];
-        public List<Card> InPlay { get; set; } = [];
+        public List<Card> CardsInPlay { get; set; } = [];
         public int LifePoints { get; set; } = 0;
         public int MaxLifePoints { get; set; } = 0;
         public PlayerRole Role { get; set; }
@@ -26,7 +26,7 @@ namespace BangSimulator.Game
         public int GetRange()
         {
             int range = 1; // default range is 1
-            foreach (var card in InPlay)
+            foreach (var card in CardsInPlay)
             {
                 if (card.Type == CardBangType.Remington)
                 {
@@ -54,43 +54,43 @@ namespace BangSimulator.Game
 
         public bool InfiniteBangs()
         {
-            return InPlay.Any(c => c.Type == CardBangType.Vulcanic);
+            return CardsInPlay.Any(c => c.Type == CardBangType.Vulcanic);
         }
 
         public bool HasMustang()
         {
-            return InPlay.Any(c => c.Type == CardBangType.Mustang);
+            return CardsInPlay.Any(c => c.Type == CardBangType.Mustang);
         }
 
         public bool HasBarrel()
         {
-            return InPlay.Any(c => c.Type == CardBangType.Barrel);
+            return CardsInPlay.Any(c => c.Type == CardBangType.Barrel);
         }
 
         public Card? HasJail()
         {
-            var card = InPlay.FirstOrDefault(c => c.Type == CardBangType.Jail);
+            var card = CardsInPlay.FirstOrDefault(c => c.Type == CardBangType.Jail);
             if (card == null)
             {
                 return null;
             }
             else
             {
-                InPlay.Remove(card);
+                CardsInPlay.Remove(card);
                 return card;
             }
         }
 
         public Card? HasDinamite()
         {
-            var card = InPlay.FirstOrDefault(c => c.Type == CardBangType.Dinamite);
+            var card = CardsInPlay.FirstOrDefault(c => c.Type == CardBangType.Dinamite);
             if (card == null)
             {
                 return null;
             }
             else
             {
-                InPlay.Remove(card);
+                CardsInPlay.Remove(card);
                 return card;
             }
         }

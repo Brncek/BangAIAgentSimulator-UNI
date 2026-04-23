@@ -63,7 +63,7 @@ namespace BangSimulator.Game
         Indians, // all players have to play a bang card or lose a life point, starting with the player who played the card
         Missed, // play this card to avoid losing a life point when someone plays a bang card against you
         Panic, // play this card to take a card from another player, but you can only take a card that is adjacent to you (to the left or right)
-        Salon, // TODO: GET INFO ABOUT CARD
+        Salon, // everybody gets +1 lifr if posible
         Stagecoach, // + 2 cards
         WellsFargo // + 3 cards
 

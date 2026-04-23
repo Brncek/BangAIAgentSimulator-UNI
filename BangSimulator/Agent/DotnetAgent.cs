@@ -6,7 +6,7 @@ using BangSimulator.Game;
 
 namespace BangSimulator.Agent
 {
-    public class PythonAgent : IAgent
+    internal class DotnetAgent : IAgent
     {
         public void GameOver(GameResoult result)
         {

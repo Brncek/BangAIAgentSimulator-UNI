@@ -1,13 +1,15 @@
 ﻿
 using BangSimulator.Agent.Model;
+using BangSimulator.Game;
 
 namespace BangSimulator.Agent
 {
     public interface IAgent
     {
-        //TODO: define agent interface
 
         public AgentAction Step(GameInfo gameInfo);
+
+        public void GameOver(GameResoult result);
 
         public void Reset();
 
