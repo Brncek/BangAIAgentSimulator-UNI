@@ -23,7 +23,7 @@ namespace BangSimulator.Game
         private Stack<Card> deck;
         private List<Card> discardPile;
 
-        public LinkedList<(Card plaied, int pId)> DeckMemory { get; set; } = []; //TODO: add target player id
+        public LinkedList<DeckMemory> DeckMemory { get; set; } = []; 
 
         public Deck()
         {
@@ -50,13 +50,16 @@ namespace BangSimulator.Game
             return deck.Pop();
         }
 
-        public void DiscardCard(Card card,  int playerIndex)
+        public void DiscardCard(Card card,  int playerIndex, int targetId)
         {
+            if (card == null)
+                return;
+
             discardPile.Add(card);
         
             if (playerIndex != -1)
             {
-                DeckMemory.AddFirst((card, playerIndex));
+                DeckMemory.AddFirst(new DeckMemory(card, playerIndex, targetId));
                 if (DeckMemory.Count > Deck.MemSize) 
                     DeckMemory.RemoveLast();
             }
@@ -195,5 +198,20 @@ namespace BangSimulator.Game
 
             return cards;
         }
+    }
+
+
+    public class DeckMemory
+    {
+        public DeckMemory(Card card, int pId, int targetId)
+        {
+            this.plaied = card;
+            this.pId = pId;
+            this.targetId = targetId;
+        }
+
+        public Card plaied { get; set; }
+        public int pId { get; set; }
+        public int targetId { get; set; }
     }
 }

@@ -9,6 +9,8 @@ namespace BangSimulator.Game
 {
     public class Player
     {
+        public int Id { get; set; }
+
         public List<Card> Hand { get; set; } = [];
         public List<Card> CardsInPlay { get; set; } = [];
         public int LifePoints { get; set; } = 0;

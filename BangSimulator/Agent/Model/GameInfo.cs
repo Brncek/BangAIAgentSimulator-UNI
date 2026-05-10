@@ -9,7 +9,7 @@ namespace BangSimulator.Agent.Model
     {
         public int[] GamePlayerLifes { get; set; } = [];
 
-        public int ScherifIndex { get; set; }
+        public int ScherifId { get; set; }
 
         public int PlayerHelth { get; set; } = 0;
 
@@ -21,7 +21,7 @@ namespace BangSimulator.Agent.Model
 
         public Card? ReactionTo  { get; set; } = null;
 
-        public (Card plaied, int pId)[] DeckMemory { get; set; } = [];
+        public DeckMemory[] DeckMemory { get; set; } = [];
 
         public GameState GameState { get; set; } = GameState.InPlay;
     }
@@ -38,5 +38,10 @@ namespace BangSimulator.Agent.Model
     {
         public Card? PlayedCard { get; set; }
         public int[] PotencialTargets { get; set; } = [];
+
+        public override string ToString()
+        {
+            return "PlayedCard: " + (PlayedCard != null ? PlayedCard.ToString() : "None") + ", PotencialTargets: [" + string.Join(", ", PotencialTargets) + "]";
+        }
     }
 }

@@ -13,7 +13,7 @@ namespace BangSimulator.Agent
             throw new NotImplementedException();
         }
 
-        //TODO:
+        //TODO: todo connect python agent to c# code
         public void Reset()
         {
             throw new NotImplementedException();

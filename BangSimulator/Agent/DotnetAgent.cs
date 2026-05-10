@@ -13,7 +13,7 @@ namespace BangSimulator.Agent
             throw new NotImplementedException();
         }
 
-        //TODO:
+        //TODO: make dotnet 
         public void Reset()
         {
             throw new NotImplementedException();

@@ -1,7 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-using BangSimulator.Game;
+﻿using BangSimulator.Game;
 
 namespace BangSimulator.Agent.Model
 {
@@ -9,6 +6,12 @@ namespace BangSimulator.Agent.Model
     {
         public Card? PlayedCard { get; set; }
         public int target { get; set; }
+
+
+        public override string ToString()
+        {
+            return "PlayedCard: " + (PlayedCard != null ? PlayedCard.ToString() : "None") + ", Target: " + target;
+        }
     }
 
 }
