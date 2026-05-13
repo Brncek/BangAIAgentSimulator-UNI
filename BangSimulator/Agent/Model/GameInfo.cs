@@ -7,32 +7,22 @@ namespace BangSimulator.Agent.Model
 {
     public class GameInfo
     {
+        public PlayerRole PlayerRole { get; set; }
+
         public int[] GamePlayerLifes { get; set; } = [];
 
         public int ScherifId { get; set; }
 
         public int PlayerHelth { get; set; } = 0;
 
-        public PlayerRole PlayerRole { get; set; } 
-
         public List<Action> AvanableActions {  get; set; } = []; 
 
         public List<Card> CardsOut { get; set; } = [];
 
-        public Card? ReactionTo  { get; set; } = null;
-
         public DeckMemory[] DeckMemory { get; set; } = [];
 
-        public GameState GameState { get; set; } = GameState.InPlay;
     }
 
-    public enum GameState
-    {
-        InPlay,
-        Dead,
-        Win,
-        Defeat
-    }
 
     public class Action
     {

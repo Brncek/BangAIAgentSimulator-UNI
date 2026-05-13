@@ -8,12 +8,13 @@ namespace BangSimulator.Agent
 {
     internal class DotnetAgent : IAgent
     {
-        public void GameOver(GameResoult result)
+        //TODO: make dotnet agent
+
+        public void GameOver(PlayerRole winingRole)
         {
             throw new NotImplementedException();
         }
 
-        //TODO: make dotnet 
         public void Reset()
         {
             throw new NotImplementedException();

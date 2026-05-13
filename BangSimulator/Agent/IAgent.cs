@@ -9,7 +9,7 @@ namespace BangSimulator.Agent
 
         public AgentAction Step(GameInfo gameInfo);
 
-        public void GameOver(GameResoult result);
+        public void GameOver(PlayerRole winingRole);
 
         public void Reset();
 

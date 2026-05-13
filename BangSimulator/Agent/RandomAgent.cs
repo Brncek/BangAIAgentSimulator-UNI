@@ -10,7 +10,7 @@ namespace BangSimulator.Agent
     {
         private static Random random = GlobalRnd.Rnd;
 
-        public void GameOver(GameResoult result)
+        public void GameOver(PlayerRole winingRole)
         {
         }
 

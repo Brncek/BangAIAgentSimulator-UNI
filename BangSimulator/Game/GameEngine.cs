@@ -209,7 +209,6 @@ namespace BangSimulator.Game
                         gameInfo.ScherifId = scherifID;
                         gameInfo.DeckMemory = Deck.DeckMemory.ToArray();
                         gameInfo.CardsOut = player.CardsInPlay;
-                        gameInfo.GameState = GameState.InPlay;
 
                         gameInfo.AvanableActions = BuildActions(playerIndex, alivePlayers, bangNotUsed);
 
