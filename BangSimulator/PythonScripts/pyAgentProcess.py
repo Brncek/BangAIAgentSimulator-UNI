@@ -1,35 +1,69 @@
 ﻿from urllib import response
-import zmq
-import msgpack
 import sys
+import struct
+import msgpack
+
 
 from pyAgent import pyAgent
 
 
 agent = pyAgent()
 
-port = sys.argv[1]
+PIPE_NAME = sys.argv[1]
 
-adress = "tcp://127.0.0.1:" + port  
+pipe = open(
+    rf'\\.\pipe\{PIPE_NAME}',
+    'r+b',
+    buffering=0
+)
 
-context = zmq.Context()
+def read_exact(pipe_handle, size):
+    buffer = b''
 
-socket = context.socket(zmq.PAIR)
-socket.bind(adress)
+    while len(buffer) < size:
+        chunk = pipe_handle.read(
+            size - len(buffer)
+        )
+
+        if not chunk:
+            raise Exception("Pipe closed")
+
+        buffer += chunk
+
+    return buffer
+
 
 while True:
-   
-    data = socket.recv()
+    size_data = read_exact(pipe, 4)
 
-    request = msgpack.unpackb(data, raw=False)
+    request_size = struct.unpack(
+        "i",
+        size_data
+    )[0]
+
+    payload = read_exact(
+        pipe,
+        request_size
+    )
+
+    request = msgpack.unpackb(payload, raw=False)
 
     type = request["requestType"]
 
     if type == 0:
-
         reaction = agent.Step(request)
 
-        socket.send(msgpack.packb(reaction))
+        response_bytes = msgpack.packb(reaction)
+
+        pipe.write(
+            struct.pack(
+                "i",
+                len(response_bytes)
+                )
+        )
+
+        pipe.write(response_bytes)
+        pipe.flush()
 
     elif type == 1:
         agent.Reset()

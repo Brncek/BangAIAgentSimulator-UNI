@@ -7,27 +7,16 @@ using Microsoft.Extensions.Configuration;
 using NetMQ;
 using NetMQ.Sockets;
 
+using System.IO.Pipes;
+
 namespace BangSimulator.Agent
 {
 
     public class PythonAgent : IAgent, IDisposable
     {
-        private static readonly int basePort = 5555;
-
-        private static int agentNextId = 0;
-        private static Mutex idMutex = new();
-
-        private static int GetNextAgentId()
-        {
-            idMutex.WaitOne();
-            int id = agentNextId;
-            agentNextId++;
-            idMutex.ReleaseMutex();
-            return id;
-        }
-
-        private PairSocket socket;
         private Process pythonProcess;
+
+        private NamedPipeServerStream pipe;
 
         public PythonAgent()
         {
@@ -39,8 +28,14 @@ namespace BangSimulator.Agent
             bool pythonDebug = configuration.GetValue<bool>("PythonDebugConsole");
 
 
-            int agentID = GetNextAgentId();
-            int port = basePort + agentID;
+            string pipeName =$"PyAgentPipe_{Guid.NewGuid()}";
+
+            pipe = new NamedPipeServerStream(
+                pipeName,
+                PipeDirection.InOut,
+                1,
+                PipeTransmissionMode.Byte,
+                PipeOptions.None);
 
 
             pythonProcess = new Process
@@ -48,34 +43,26 @@ namespace BangSimulator.Agent
                 StartInfo = new ProcessStartInfo
                 {
                     FileName = "python",
-                    Arguments = $"PythonScripts\\pyAgentProcess.py \"{port}\"",
+                    Arguments = $"PythonScripts\\pyAgentProcess.py {pipeName}",
                     UseShellExecute = false,
                     CreateNoWindow = !pythonDebug
                 }
             };
-
             pythonProcess.Start();
 
-            Thread.Sleep(1000);
+            pipe.WaitForConnection();
 
-            socket = new PairSocket();
-            socket.Connect($"tcp://127.0.0.1:{port}");
+            Thread.Sleep(1000);
         }
 
         public void GameOver(PlayerRole winingRole)
         {
-            byte[] bytes = MessagePackSerializer.Serialize(
-                new PythonAgentRequest { RequestType = PythonAgentRequestType.GameOver, PlayerRole = winingRole });
-
-            socket.SendFrame(bytes);
+            SendData(new PythonAgentRequest { RequestType = PythonAgentRequestType.GameOver, PlayerRole = winingRole });
         }
 
         public void Reset()
         {
-            byte[] bytes = MessagePackSerializer.Serialize(
-                new PythonAgentRequest { RequestType = PythonAgentRequestType.Reset });
-
-            socket.SendFrame(bytes);
+            SendData(new PythonAgentRequest { RequestType = PythonAgentRequestType.Reset });
         }
 
         public AgentAction Step(GameInfo gameInfo)
@@ -119,7 +106,6 @@ namespace BangSimulator.Agent
                 cardsOutArray[i] = (int)cardsOut[i].Type;
             }
 
-
             var agentRequest = new PythonAgentRequest
             {
                 RequestType = PythonAgentRequestType.Step,
@@ -134,13 +120,9 @@ namespace BangSimulator.Agent
                 CardsOut = cardsOutArray
             };
 
-            byte[] bytes = MessagePackSerializer.Serialize(agentRequest);
+            SendData(agentRequest);
 
-            socket.SendFrame(bytes);
-
-            byte[] responseBytes = socket.ReceiveFrameBytes();
-
-            var response = MessagePackSerializer.Deserialize<PythonAgentResponse>(responseBytes);
+            var response = ReceveData();
 
             Card? playedCard = null;
 
@@ -169,14 +151,58 @@ namespace BangSimulator.Agent
 
         public void Dispose()
         {
-            socket?.Dispose();
-
             if (!pythonProcess.HasExited)
             {
                 pythonProcess.Kill();
             }
-
             pythonProcess.Dispose();
+
+            pipe.Close();
+            pipe.Dispose();
+        }
+
+        private void SendData(PythonAgentRequest data)
+        {
+            byte[] bytes = MessagePackSerializer.Serialize(data);
+            byte[] sizeBytes = BitConverter.GetBytes(bytes.Length);
+
+
+            pipe.Write(sizeBytes, 0, sizeBytes.Length);
+            pipe.Write(bytes, 0, bytes.Length);
+            pipe.Flush();
+        }
+
+        private PythonAgentResponse ReceveData()
+        {
+            byte[] responseSizeBytes = new byte[4];
+            ReadExact( pipe, responseSizeBytes, 4);
+
+            int responseSize = BitConverter.ToInt32(responseSizeBytes);
+            byte[] responseBytes = new byte[responseSize];
+
+            ReadExact(pipe, responseBytes, responseSize);
+
+            return MessagePackSerializer.Deserialize<PythonAgentResponse>(responseBytes);
+        }
+
+        private void ReadExact( Stream stream, byte[] buffer, int size)
+        {
+            int offset = 0;
+
+            while (offset < size)
+            {
+                int read = stream.Read(
+                    buffer,
+                    offset,
+                    size - offset);
+
+                if (read == 0)
+                {
+                    throw new Exception("Pipe closed");
+                }
+
+                offset += read;
+            }
         }
     }
 

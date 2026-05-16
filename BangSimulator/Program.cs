@@ -23,7 +23,7 @@ namespace BangSimulator
 
             int startTime = System.Environment.TickCount;
 
-            for (int i = 0; i < 5000; i++)
+            for (int i = 0; i < 100000; i++)
             {
                 var res = game.Play();
             
@@ -50,7 +50,6 @@ namespace BangSimulator
 
             int elapsedTime = endTime - startTime;
 
-            elapsedTime *= 20;
 
             Console.WriteLine("Elapsed time: " + elapsedTime / 1000.0 + " seconds");
             Console.WriteLine("Sheriff wins: " + sheriffWins / 100000.0 * 100 + "%");
