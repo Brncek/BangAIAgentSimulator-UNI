@@ -268,7 +268,7 @@ namespace BangSimulator.Game
                         break;
                     case CardBangType.CatBalou or CardBangType.Duel or CardBangType.Dinamite or CardBangType.Jail:
                         { 
-                            actions.Add(new Action
+                            var action = new Action
                             {
                                 PlayedCard = card,
                                 PotencialTargets = GetAllPlayersButMe(playerIndex, alivePlayers, true)
