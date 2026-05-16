@@ -7,11 +7,13 @@ namespace BangSimulator
     {
         static void Main(string[] args)
         {
-            List<RandomAgent> agents = new List<RandomAgent>();
-            for (int i = 0; i < 5; i++)
+            List<IAgent> agents = new List<IAgent>();
+            for (int i = 0; i < 4; i++)
             {
                 agents.Add(new RandomAgent());
             }
+
+            agents.Add(new PythonAgent());
 
             GameEngine game = new GameEngine(agents.ToArray());
 
@@ -21,10 +23,15 @@ namespace BangSimulator
 
             int startTime = System.Environment.TickCount;
 
-            for (int i = 0; i < 100000; i++)
+            for (int i = 0; i < 5000; i++)
             {
                 var res = game.Play();
             
+                if (i % 1000 == 0)
+                {
+                    Console.WriteLine(i);
+                }
+
                 if (res.WinningRole == PlayerRole.Sheriff)
                 {
                     sheriffWins++;
@@ -43,6 +50,7 @@ namespace BangSimulator
 
             int elapsedTime = endTime - startTime;
 
+            elapsedTime *= 20;
 
             Console.WriteLine("Elapsed time: " + elapsedTime / 1000.0 + " seconds");
             Console.WriteLine("Sheriff wins: " + sheriffWins / 100000.0 * 100 + "%");

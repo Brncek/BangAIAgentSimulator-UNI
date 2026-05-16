@@ -4,6 +4,7 @@ using System.ComponentModel;
 using System.Text;
 using BangSimulator.Agent;
 using BangSimulator.Agent.Model;
+using static System.Collections.Specialized.BitVector32;
 using Action = BangSimulator.Agent.Model.Action;
 
 namespace BangSimulator.Game
@@ -43,17 +44,17 @@ namespace BangSimulator.Game
                     Players = new Player[]
                     {
                         new Player(PlayerRole.Sheriff, agents[0]),
-                        new Player(PlayerRole.Outlaw, agents[1]),
+                        new Player(PlayerRole.Bandit, agents[1]),
                         new Player(PlayerRole.Renegade, agents[2]),
-                        new Player(PlayerRole.Outlaw, agents[3])
+                        new Player(PlayerRole.Bandit, agents[3])
                     };
                     break;
                 case 5:
                     Players = new Player[]
                     {
                         new Player(PlayerRole.Sheriff, agents[0]),
-                        new Player(PlayerRole.Outlaw, agents[1]),
-                        new Player(PlayerRole.Outlaw, agents[2]),
+                        new Player(PlayerRole.Bandit, agents[1]),
+                        new Player(PlayerRole.Bandit, agents[2]),
                         new Player(PlayerRole.Renegade, agents[3]),
                         new Player(PlayerRole.Deputy, agents[4])
                     };
@@ -62,8 +63,8 @@ namespace BangSimulator.Game
                     Players = new Player[]
                     {
                         new Player(PlayerRole.Sheriff, agents[0]),
-                        new Player(PlayerRole.Outlaw, agents[1]),
-                        new Player(PlayerRole.Outlaw, agents[2]),
+                        new Player(PlayerRole.Bandit, agents[1]),
+                        new Player(PlayerRole.Bandit, agents[2]),
                         new Player(PlayerRole.Renegade, agents[3]),
                         new Player(PlayerRole.Deputy, agents[4]),
                         new Player(PlayerRole.Deputy, agents[5])
@@ -73,9 +74,9 @@ namespace BangSimulator.Game
                     Players = new Player[]
                     {
                         new Player(PlayerRole.Sheriff, agents[0]),
-                        new Player(PlayerRole.Outlaw, agents[1]),
-                        new Player(PlayerRole.Outlaw, agents[2]),
-                        new Player(PlayerRole.Outlaw, agents[3]),
+                        new Player(PlayerRole.Bandit, agents[1]),
+                        new Player(PlayerRole.Bandit, agents[2]),
+                        new Player(PlayerRole.Bandit, agents[3]),
                         new Player(PlayerRole.Renegade, agents[4]),
                         new Player(PlayerRole.Deputy, agents[5]),
                         new Player(PlayerRole.Deputy, agents[6])
@@ -102,6 +103,8 @@ namespace BangSimulator.Game
     
         public GameResoult Play()
         {
+
+            //TODO: schufle players
             List<Player> alivePlayers = Players.ToList();
             alivePlayers.ForEach(p => p.Reset());
             Deck.Reset();
@@ -243,7 +246,6 @@ namespace BangSimulator.Game
 
             foreach (var card in player.Hand)
             {
-                
                 switch (card.Type)
                 {
                     case CardBangType.Bang:
@@ -267,29 +269,32 @@ namespace BangSimulator.Game
                         }
                         break;
                     case CardBangType.CatBalou or CardBangType.Duel or CardBangType.Dinamite or CardBangType.Jail:
-                        { 
-                            var action = new Action
+                        {
+                            actions.Add(new Action
                             {
                                 PlayedCard = card,
                                 PotencialTargets = GetAllPlayersButMe(playerIndex, alivePlayers, true)
                             });
-                        } break; 
+                        }
+                        break;
                     case CardBangType.Panic:
-                        { 
+                        {
                             actions.Add(new Action
                             {
                                 PlayedCard = card,
                                 PotencialTargets = GetAllPlayersInRange(playerIndex, alivePlayers, 1, true)
                             });
-                        } break; 
+                        }
+                        break;
                     case CardBangType.Missed or CardBangType.Beer:
-                        { 
+                        {
                             actions.Add(new Action
                             {
                                 PlayedCard = card,
                                 PotencialTargets = []
                             });
-                        } break; 
+                        }
+                        break;
 
                     default:
                         {
@@ -298,10 +303,12 @@ namespace BangSimulator.Game
                                 PlayedCard = card,
                                 PotencialTargets = [-1]
                             });
-                        } break;
+                        }
+                        break;
                 }
-                
+
             }
+
 
             foreach (var action in actions)
             {
@@ -731,34 +738,53 @@ namespace BangSimulator.Game
 
         private GameResoult? CheckForWin(List<Player> alivePlayers)
         {
-            Player[] bandits = alivePlayers.Where(p => p.Role == PlayerRole.Outlaw).ToArray();
-            Player[] deputys = alivePlayers.Where(p => p.Role == PlayerRole.Deputy).ToArray();
-            Player[] scheriff = alivePlayers.Where(p => p.Role == PlayerRole.Sheriff).ToArray();
-            Player[] renegad = alivePlayers.Where(p => p.Role == PlayerRole.Renegade).ToArray();
+            List<Player> bandits = [];
+            List<Player> deputys = [];
+            Player? scheriff = null;
+            Player? renegad = null;
 
-            if (scheriff.Length == 0 && bandits.Length > 0)
+            for (int i = 0; i < alivePlayers.Count; i++)
+            {
+                switch(alivePlayers[i].Role)
+                {
+                    case PlayerRole.Bandit:
+                        bandits.Add(alivePlayers[i]);
+                        break;
+                    case PlayerRole.Renegade:
+                        renegad = alivePlayers[i];
+                        break;
+                    case PlayerRole.Deputy:
+                        deputys.Add(alivePlayers[i]);
+                        break;
+                    case PlayerRole.Sheriff:
+                        scheriff = alivePlayers[i];
+                        break;
+                }
+            }
+
+            if (scheriff == null && bandits.Count > 0)
             {
                 return new GameResoult
                 {
-                    WinningRole = PlayerRole.Outlaw,
-                    WinningPlayers = Players.Where(p => p.Role == PlayerRole.Outlaw).ToArray()
+                    WinningRole = PlayerRole.Bandit,
+                    WinningPlayers = [.. bandits]
                 };
                 
             }
-            else if (bandits.Length == 0 && renegad.Length == 0)
+            else if (bandits.Count == 0 && renegad == null)
             {
                 return new GameResoult
                 {
                     WinningRole = PlayerRole.Sheriff,
-                    WinningPlayers = Players.Where(p => p.Role == PlayerRole.Sheriff || p.Role == PlayerRole.Deputy).ToArray()
+                    WinningPlayers = [scheriff!, .. deputys]
                 };
             }
-            else if (scheriff.Length == 0 && bandits.Length == 0 && deputys.Length == 0 && renegad.Length == 1)
+            else if (scheriff == null && bandits.Count == 0 && deputys.Count == 0 && renegad != null)
             {
                 return new GameResoult
                 {
                     WinningRole = PlayerRole.Renegade,
-                    WinningPlayers = Players.Where(p => p.Role == PlayerRole.Renegade).ToArray()
+                    WinningPlayers = [renegad]
                 };
             }
 

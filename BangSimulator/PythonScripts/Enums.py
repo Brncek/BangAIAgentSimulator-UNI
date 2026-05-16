@@ -1,21 +1,15 @@
-﻿import enum
+﻿from enum import IntEnum
 
-class AgentAction: 
-    def __init__(self, actionType : int, target : int):
-        self.ActionType = actionType
-        self.Target = target
-
-class GameInfo: 
-    #TODO finish this class
-    pass
-
-class PlayerRole(enum):
+class PlayerRole(IntEnum):
+    NO = -1
     Sheriff = 0
     Deputy = 1
     Outlaw = 2
     Renegade = 3
 
-class CardType(enum):
+class CardType(IntEnum):
+    NO = -1
+
     Barrel = 0
     scope = 1
     Mustang = 2

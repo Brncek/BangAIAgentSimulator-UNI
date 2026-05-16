@@ -1,7 +1,10 @@
-﻿import zmq
+﻿from urllib import response
+import zmq
 import msgpack
-import sys 
+import sys
+
 from pyAgent import pyAgent
+
 
 agent = pyAgent()
 
@@ -20,20 +23,16 @@ while True:
 
     request = msgpack.unpackb(data, raw=False)
 
-    type = request[0]
+    type = request["requestType"]
 
     if type == 0:
-        pass
+
+        reaction = agent.Step(request)
+
+        socket.send(msgpack.packb(reaction))
+
     elif type == 1:
-        pass
+        agent.Reset()
     else:
-        pass
+        agent.GameOver(request["playerRole"])
 
-    #TODO implement the logic of the agent here, for now we just return the same text in uppercase
-    
-    #response = [
-    #    True,
-    #    text.upper()
-    #]
-
-    #socket.send(msgpack.packb(response))

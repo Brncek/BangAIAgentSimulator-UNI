@@ -119,7 +119,7 @@ namespace BangSimulator.Game
     {
         Sheriff,
         Deputy,
-        Outlaw,
+        Bandit,
         Renegade
     }
 }

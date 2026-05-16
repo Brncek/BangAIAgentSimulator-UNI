@@ -1,4 +1,5 @@
 {
   "RndSeed": -1,
-  "MemSize":  25
+  "MemSize": 25,
+  "PythonDebugConsole" :  false
 }

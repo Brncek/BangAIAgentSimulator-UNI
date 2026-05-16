@@ -22,7 +22,7 @@
     <None Update="GameConfig.json">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
-    <None Update="PythonScripts\Model.py">
+    <None Update="PythonScripts\Enums.py">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
     <None Update="PythonScripts\pyAgent.py">
