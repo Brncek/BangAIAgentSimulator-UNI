@@ -7,7 +7,7 @@ namespace BangSimulator.Game
 {
     public class Deck
     {
-        private static int MemSize;
+        public static int MemSize { get; private set; }
 
         static Deck()
         {

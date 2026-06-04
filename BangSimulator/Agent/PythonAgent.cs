@@ -4,8 +4,6 @@ using BangSimulator.Agent.Model;
 using BangSimulator.Game;
 using MessagePack;
 using Microsoft.Extensions.Configuration;
-using NetMQ;
-using NetMQ.Sockets;
 
 using System.IO.Pipes;
 

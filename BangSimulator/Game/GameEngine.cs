@@ -4,7 +4,6 @@ using System.ComponentModel;
 using System.Text;
 using BangSimulator.Agent;
 using BangSimulator.Agent.Model;
-using static System.Collections.Specialized.BitVector32;
 using Action = BangSimulator.Agent.Model.Action;
 
 namespace BangSimulator.Game
@@ -18,11 +17,6 @@ namespace BangSimulator.Game
 
         public GameEngine(Player[] players)
         {
-            if (players.Length < 4 || players.Length > 7)
-            {
-                throw new ArgumentException("Number of players must be between 4 and 7.");
-            }
-
             Players = players;
 
             for (int i = 0; i < Players.Length; i++)

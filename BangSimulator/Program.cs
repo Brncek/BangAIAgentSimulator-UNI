@@ -10,10 +10,10 @@ namespace BangSimulator
             List<IAgent> agents = new List<IAgent>();
             for (int i = 0; i < 4; i++)
             {
-                agents.Add(new RandomAgent());
+                agents.Add(new ScriptedAgent());
             }
 
-            agents.Add(new PythonAgent());
+            agents.Add(new ScriptedAgent());
 
             GameEngine game = new GameEngine(agents.ToArray());
 

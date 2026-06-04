@@ -54,7 +54,7 @@ namespace BangSimulator.Game
 
         // Brown
         Bang, // BANG!! 
-        Beer, // +1 Life
+        Beer, // +1 Life  (SIMULATING ENGINE AUTOMATICLAI USES BEER WHEN THE TURN STARTS)
 
         CatBalou, // take someone's card and put it in the discard pile
         Duel, // challenge someone to a duel, they have to play a bang card or lose a life point, then you have to do the same, until one of you can't play a bang card

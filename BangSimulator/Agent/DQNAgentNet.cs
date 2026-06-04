@@ -1,14 +1,13 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-using BangSimulator.Agent.Model;
+﻿using BangSimulator.Agent.Model;
 using BangSimulator.Game;
+
+using RLMatrix; //LIB FOR REINFORCEMENT LEARNING
 
 namespace BangSimulator.Agent
 {
-    internal class DotnetAgent : IAgent
+    internal class DQNAgentNet : IAgent
     {
-        //TODO: make dotnet agent
+        //TOOD::
 
         public void GameOver(PlayerRole winingRole)
         {
