@@ -6,6 +6,7 @@ using MessagePack;
 using Microsoft.Extensions.Configuration;
 
 using System.IO.Pipes;
+using MessagePack.Formatters;
 
 namespace BangSimulator.Agent
 {
@@ -104,6 +105,8 @@ namespace BangSimulator.Agent
                 cardsOutArray[i] = (int)cardsOut[i].Type;
             }
 
+            var embeded = gameInfo.Encode();
+
             var agentRequest = new PythonAgentRequest
             {
                 RequestType = PythonAgentRequestType.Step,
@@ -115,7 +118,10 @@ namespace BangSimulator.Agent
 
                 AvanableActions = pythonActions,
                 DeckMemory = pythonMemory,
-                CardsOut = cardsOutArray
+                CardsOut = cardsOutArray,
+
+                EmbededState = embeded.State,
+                EmbededCardMask = embeded.Mask
             };
 
             SendData(agentRequest);
@@ -123,11 +129,32 @@ namespace BangSimulator.Agent
             var response = ReceveData();
 
             Card? playedCard = null;
+            CardBangType? targetType = null;
+            int targetId = -1;
 
-            if (response.Type != -1)
+            if (response.MaskedActionIndex != -1)
             {
-                var targetType = (CardBangType)response.Type;
+                var output = gameInfo.DecodeAction(response.MaskedActionIndex);
 
+                if (output.EndTurn)
+                {
+                    return new AgentAction { PlayedCard = null, target = -1 };
+                }
+
+                targetType = output.Card;
+                targetId = output.Target;
+            }
+            else
+            {
+                if (response.Type != -1)
+                {
+                    targetType = (CardBangType)response.Type;
+                    targetId = response.TargetId;
+                }
+            }
+
+            if (targetType != null)
+            {
                 for (int i = 0; i < availableActions.Count; i++)
                 {
                     var action = availableActions[i];
@@ -143,7 +170,7 @@ namespace BangSimulator.Agent
             return new AgentAction
             {
                 PlayedCard = playedCard,
-                target = response.TargetId
+                target = targetId
             };
         }
 
@@ -215,6 +242,9 @@ namespace BangSimulator.Agent
 
         [Key(1)]
         public int TargetId { get; set; }
+
+        [Key(2)]
+        public int MaskedActionIndex { get; set; } = -1;
     }
 
     [MessagePackObject]
@@ -243,6 +273,12 @@ namespace BangSimulator.Agent
 
         [Key("cardsOut")]
         public int[] CardsOut { get; set; } = [];
+
+        [Key("embededState")]
+        public float[] EmbededState { get; set; } = [];
+
+        [Key("embededCardMask")]
+        public float[] EmbededCardMask { get; set; } = [];
     }
 
     [MessagePackObject]

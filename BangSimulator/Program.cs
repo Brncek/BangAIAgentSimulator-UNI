@@ -13,7 +13,7 @@ namespace BangSimulator
                 agents.Add(new ScriptedAgent());
             }
 
-            agents.Add(new ScriptedAgent());
+            agents.Add(new PythonAgent());
 
             GameEngine game = new GameEngine(agents.ToArray());
 

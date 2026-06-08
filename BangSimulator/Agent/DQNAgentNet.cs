@@ -7,7 +7,7 @@ namespace BangSimulator.Agent
 {
     internal class DQNAgentNet : IAgent
     {
-        //TOOD::
+        //TOOD:: implement
 
         public void GameOver(PlayerRole winingRole)
         {

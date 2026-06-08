@@ -4,8 +4,6 @@ namespace BangSimulator.Agent.Model
 {
     public class GameInfo
     {
-        private static float NoData = -10f;
-
         public PlayerRole PlayerRole { get; set; }
 
         public int[] GamePlayerLifes { get; set; } = [];
@@ -20,76 +18,89 @@ namespace BangSimulator.Agent.Model
 
         public DeckMemory[] DeckMemory { get; set; } = [];
 
+        private int NumTargets => GamePlayerLifes.Length + 2;
+        private int ActionSpaceSize => Enum.GetValues(typeof(CardBangType)).Length * NumTargets + 1; // +1 = end turn
+        private int EndTurnIndex => ActionSpaceSize - 1;
 
-        public float[] Encode(bool includeMemory = false)
+
+        public (float[] State, float[] Mask) Encode(bool includeMemory = false)
         {
-            //FIXME: REDO ENCODING 
-
             List<float> features = [];
 
             features.Add((float)PlayerRole);
             features.AddRange(GamePlayerLifes.Select(l => (float)l));
-            features.Add((float)ScherifId);
 
-            for (int i = 0; i < 3; i++)
+            features.AddRange(OneHot(ScherifId, 0, GamePlayerLifes.Length - 1)); 
+            
+            //---CARDSOUT
+
+            float[] cardsOut = Enumerable.Repeat(0f, 10).ToArray();
+
+            foreach (var card in CardsOut)
             {
-                if (i < CardsOut.Count)
-                {
-                    features.Add((float)CardsOut[i].Type);
-                }
-                else
-                {
-                    features.Add(NoData); // No card
-                }
+                cardsOut[(int)card.Type] = 1f;
             }
 
-            for (int i = 0; 10 > i; i++)
-            {
-                if (i < AvanableActions.Count)
-                {
-                    var action = AvanableActions[i];
-                    features.Add(action.PlayedCard != null ? (float)action.PlayedCard.Type : -1f);
-                    
-                    var targets = action.PotencialTargets;
-                    
-                    for (int j = 0; j < GamePlayerLifes.Length + 2; j++)
-                    {
-                        if (j < targets.Length)
-                        {
-                            features.Add((float)targets[j]);
-                        }
-                        else
-                        {
-                            features.Add(NoData); // No target
-                        }
-                    }
-                }
-                else
-                {
-                    features.Add(-10f); // No card played
-                    features.AddRange(Enumerable.Repeat(NoData, GamePlayerLifes.Length + 2)); // No targets
-                }
-            }
+            features.AddRange(cardsOut);
+
+            //---DECK MEMORY
 
             if (includeMemory)
             {
-                for (int i = 0; i < Deck.MemSize; i++)
-                {
-                    if (i >= DeckMemory.Length)
-                    {
-                        features.AddRange(Enumerable.Repeat(NoData, 3)); // No memory
-                        continue;
-                    }
+                //TODO: Encode DeckMemory
+            }
 
-                    var memory = DeckMemory[i];
-                    features.Add((float)memory.plaied.Type);
-                    features.Add((float)memory.pId);
-                    features.Add((float)memory.targetId);
+            return (features.ToArray(), BuildMask());
+        }
+
+
+        private float[] BuildMask()
+        {
+            float[] mask = new float[ActionSpaceSize];
+
+            foreach (var action in AvanableActions)
+            {
+                if (action.PlayedCard == null)
+                {
+                    mask[EndTurnIndex] = 1f;
+                    continue;
+                }
+
+                foreach (var t in action.PotencialTargets)
+                {
+                    int slot = TargetSlot(t);
+                    if (slot < 0 || slot >= NumTargets) continue; 
+                    mask[ActionIndex(action.PlayedCard.Type, t)] = 1f;
                 }
             }
 
+            return mask;
+        }
 
-            return features.ToArray();
+        private int TargetSlot(int target) => target + 2;
+
+        private int ActionIndex(CardBangType card, int target)
+            => (int)card * NumTargets + TargetSlot(target);
+
+        // Decode a flat action index back into (card, target) for stepping the env.
+        // Use this on the agent side after argmax / sampling.
+        public (CardBangType? Card, int Target, bool EndTurn) DecodeAction(int index)
+        {
+            if (index == EndTurnIndex) return (null, 0, true);
+            int card = index / NumTargets;
+            int slot = index % NumTargets;
+            return ((CardBangType)card, slot - 2, false);
+        }
+
+        private float[] OneHot(int data, int minNum, int maxNum)
+        {
+            int range = maxNum - minNum + 1;
+            float[] oneHot = new float[range];
+            if (data >= minNum && data <= maxNum)
+            {
+                oneHot[data - minNum] = 1f;
+            }
+            return oneHot;
         }
     }
 

@@ -7,7 +7,7 @@ namespace BangSimulator.Agent
 {
     internal class PPOAgent : IAgent
     {
-        //TODO::
+        //TODO:: implement
 
         public void GameOver(PlayerRole winingRole)
         {
