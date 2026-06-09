@@ -18,16 +18,16 @@ namespace BangSimulator.Agent.Model
 
         public DeckMemory[] DeckMemory { get; set; } = [];
 
-        private int NumTargets => GamePlayerLifes.Length + 2;
-        private int ActionSpaceSize => Enum.GetValues(typeof(CardBangType)).Length * NumTargets + 1; // +1 = end turn
-        private int EndTurnIndex => ActionSpaceSize - 1;
+        public int NumTargets => GamePlayerLifes.Length + 2;
+        public int ActionSpaceSize => Enum.GetValues(typeof(CardBangType)).Length * NumTargets + 1; // +1 = end turn
+        public int EndTurnIndex => ActionSpaceSize - 1;
 
 
         public (float[] State, float[] Mask) Encode(bool includeMemory = false)
         {
             List<float> features = [];
 
-            features.Add((float)PlayerRole);
+            features.AddRange(OneHot((int)PlayerRole, 0, Enum.GetValues(typeof(PlayerRole)).Length - 1));
             features.AddRange(GamePlayerLifes.Select(l => (float)l));
 
             features.AddRange(OneHot(ScherifId, 0, GamePlayerLifes.Length - 1)); 

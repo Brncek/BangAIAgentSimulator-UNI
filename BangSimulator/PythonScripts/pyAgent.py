@@ -9,6 +9,7 @@ class pyAgent:
 
 
     def Step(self, gameInfo) -> list:
+        #gameInfo["embededState"] , gameInfo["embededCardMask"] 
 
         random_action = random.choice(gameInfo["avanableActions"])
         target = random.choice(random_action[1])
