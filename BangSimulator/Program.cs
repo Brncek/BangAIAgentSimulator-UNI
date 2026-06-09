@@ -6,7 +6,7 @@ namespace BangSimulator
 {
     internal class Program
     {
-        private static readonly int NumGames = 1000;
+        private static readonly int NumGames = 25000;
 
         static void Main(string[] args)
         {
@@ -25,9 +25,9 @@ namespace BangSimulator
 
             Player[] playerList = 
             {
-                new Player(PlayerRole.Sheriff, new DQNAgentNet()),
+                new Player(PlayerRole.Sheriff, new RandomAgent()),
                 new Player(PlayerRole.Renegade, new RandomAgent()),
-                new Player(PlayerRole.Bandit, new RandomAgent()),
+                new Player(PlayerRole.Bandit, new DQNAgentNet()),
                 new Player(PlayerRole.Bandit, new RandomAgent()),
                 new Player(PlayerRole.Deputy, new RandomAgent())
             };
