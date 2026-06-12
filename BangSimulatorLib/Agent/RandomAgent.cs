@@ -1,12 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
-using BangSimulator.Agent.Model;
-using BangSimulator.Game;
+using BangSimulatorLib.Agent.Model;
+using BangSimulatorLib.Game;
 
-namespace BangSimulator.Agent
+namespace BangSimulatorLib.Agent
 {
-    internal class RandomAgent : IAgent
+    public class RandomAgent : IAgent
     {
         private static Random random = GlobalRnd.Rnd;
 

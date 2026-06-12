@@ -1,6 +1,5 @@
-﻿using BangSimulator.Agent;
-using BangSimulator.Game;
-using static MessagePack.GeneratedMessagePackResolver.BangSimulator;
+﻿using BangSimulatorLib.Agent;
+using BangSimulatorLib.Game;
 
 namespace BangSimulator
 {

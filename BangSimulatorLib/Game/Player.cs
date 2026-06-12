@@ -2,10 +2,10 @@
 using System.Collections.Generic;
 using System.Data;
 using System.Text;
-using BangSimulator.Agent;
-using BangSimulator.Agent.Model;
+using BangSimulatorLib.Agent;
+using BangSimulatorLib.Agent.Model;
 
-namespace BangSimulator.Game
+namespace BangSimulatorLib.Game
 {
     public class Player
     {

@@ -1,6 +1,6 @@
-﻿using BangSimulator.Game;
+﻿using BangSimulatorLib.Game;
 
-namespace BangSimulator.Agent.Model
+namespace BangSimulatorLib.Agent.Model
 {
     public class AgentAction
     {

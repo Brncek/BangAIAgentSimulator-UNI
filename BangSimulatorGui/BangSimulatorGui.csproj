@@ -1,0 +1,139 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net10.0-windows</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <UseWPF>true</UseWPF>
+    <ApplicationIcon>Assets\bang.ico</ApplicationIcon>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <None Remove="Assets\background.jpeg" />
+    <None Remove="Assets\background3.png" />
+    <None Remove="Assets\Cards\bang.png" />
+    <None Remove="Assets\Cards\barile.png" />
+    <None Remove="Assets\Cards\cat_balou.png" />
+    <None Remove="Assets\Cards\diligenza.png" />
+    <None Remove="Assets\Cards\dinamite.png" />
+    <None Remove="Assets\Cards\duel.png" />
+    <None Remove="Assets\Cards\emporio.png" />
+    <None Remove="Assets\Cards\gatling.png" />
+    <None Remove="Assets\Cards\hledi_mirino.png" />
+    <None Remove="Assets\Cards\indiani.png" />
+    <None Remove="Assets\Cards\mustang.png" />
+    <None Remove="Assets\Cards\panico.png" />
+    <None Remove="Assets\Cards\pivo.png" />
+    <None Remove="Assets\Cards\prigione.png" />
+    <None Remove="Assets\Cards\remington.png" />
+    <None Remove="Assets\Cards\rev_carabine.png" />
+    <None Remove="Assets\Cards\saloon.png" />
+    <None Remove="Assets\Cards\schofield.png" />
+    <None Remove="Assets\Cards\vedla_mancato.png" />
+    <None Remove="Assets\Cards\volcanic.png" />
+    <None Remove="Assets\Cards\wells_fargo.png" />
+    <None Remove="Assets\Cards\winchester.png" />
+    <None Remove="Assets\Roles\fuorilegge.png" />
+    <None Remove="Assets\Roles\rinnegato.png" />
+    <None Remove="Assets\Roles\sceriffo.png" />
+    <None Remove="Assets\Roles\vice.png" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Content Include="Assets\background.jpeg">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Assets\background3.png">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Assets\bang.ico" />
+    <Content Include="Assets\Cards\bang.png">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Assets\Cards\barile.png">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Assets\Cards\cat_balou.png">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Assets\Cards\diligenza.png">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Assets\Cards\dinamite.png">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Assets\Cards\duel.png">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Assets\Cards\emporio.png">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Assets\Cards\gatling.png">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Assets\Cards\hledi_mirino.png">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Assets\Cards\indiani.png">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Assets\Cards\mustang.png">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Assets\Cards\panico.png">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Assets\Cards\pivo.png">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Assets\Cards\prigione.png">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Assets\Cards\remington.png">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Assets\Cards\rev_carabine.png">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Assets\Cards\saloon.png">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Assets\Cards\schofield.png">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Assets\Cards\vedla_mancato.png">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Assets\Cards\volcanic.png">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Assets\Cards\wells_fargo.png">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Assets\Cards\winchester.png">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Assets\Roles\fuorilegge.png">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Assets\Roles\rinnegato.png">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Assets\Roles\sceriffo.png">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Assets\Roles\vice.png">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="ScottPlot.WPF" Version="5.1.58" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\BangSimulatorLib\BangSimulatorLib.csproj" />
+  </ItemGroup>
+
+</Project>

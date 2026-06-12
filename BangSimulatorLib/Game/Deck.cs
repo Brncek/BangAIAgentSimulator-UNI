@@ -3,12 +3,17 @@ using System.Collections.Generic;
 using System.Text;
 using Microsoft.Extensions.Configuration;
 
-namespace BangSimulator.Game
+namespace BangSimulatorLib.Game
 {
     public class Deck
     {
-        public static int MemSize { get; private set; }
+        private Stack<Card> deck;
+        private List<Card> discardPile;
 
+        public static int MemSize { get; private set; }
+        public int[,] PlayerToPlayerBang { get; set; }
+        public LinkedList<DeckMemory> DeckMemory { get; set; } = [];
+        
         static Deck()
         {
             var configuration = new ConfigurationBuilder()
@@ -19,16 +24,11 @@ namespace BangSimulator.Game
             MemSize = configuration.GetValue<int>("MemSize");
         }
 
-
-        private Stack<Card> deck;
-        private List<Card> discardPile;
-
-        public LinkedList<DeckMemory> DeckMemory { get; set; } = []; 
-
-        public Deck()
+        public Deck(int pCount)
         {
             deck = new Stack<Card>();
             discardPile = [];
+            PlayerToPlayerBang = new int[pCount, pCount];
 
             Reset();
         }
@@ -38,6 +38,14 @@ namespace BangSimulator.Game
             discardPile.Clear();
             deck.Clear();
             DeckMemory.Clear();
+
+            for (int i = 0; i < PlayerToPlayerBang.GetLength(0); i++)
+            {
+                for (int j = 0; j < PlayerToPlayerBang.GetLength(1); j++)
+                {
+                    PlayerToPlayerBang[i, j] = 0;
+                }
+            }
 
             discardPile = getDeck();
             ShuffleFromDiscard();
@@ -54,6 +62,11 @@ namespace BangSimulator.Game
         {
             if (card == null)
                 return;
+
+            if (card.Type == CardBangType.Bang && targetId >= 0)
+            {
+                PlayerToPlayerBang[playerIndex, targetId]++;
+            }
 
             discardPile.Add(card);
         

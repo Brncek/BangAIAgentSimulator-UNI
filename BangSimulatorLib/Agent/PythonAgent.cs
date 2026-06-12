@@ -1,14 +1,14 @@
 ﻿using System.Diagnostics;
 using System.Net.Sockets;
-using BangSimulator.Agent.Model;
-using BangSimulator.Game;
+using BangSimulatorLib.Agent.Model;
+using BangSimulatorLib.Game;
 using MessagePack;
 using Microsoft.Extensions.Configuration;
 
 using System.IO.Pipes;
 using MessagePack.Formatters;
 
-namespace BangSimulator.Agent
+namespace BangSimulatorLib.Agent
 {
 
     public class PythonAgent : IAgent, IDisposable

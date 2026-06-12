@@ -4,7 +4,7 @@ using System.Security.Principal;
 using System.Text;
 using Microsoft.Extensions.Configuration;
 
-namespace BangSimulator.Game
+namespace BangSimulatorLib.Game
 {
     public class GlobalRnd
     {

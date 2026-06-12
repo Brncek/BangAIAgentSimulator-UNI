@@ -2,18 +2,18 @@
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Text;
-using BangSimulator.Agent;
-using BangSimulator.Agent.Model;
-using Action = BangSimulator.Agent.Model.Action;
+using BangSimulatorLib.Agent;
+using BangSimulatorLib.Agent.Model;
+using Action = BangSimulatorLib.Agent.Model.Action;
 
-namespace BangSimulator.Game
+namespace BangSimulatorLib.Game
 {
 
 
     public class GameEngine
     {
         public Player[] Players { get; set; } = [];
-        public Deck Deck { get; set; } = new Deck(); 
+        public Deck Deck { get; set; }
 
         public GameEngine(Player[] players)
         {
@@ -23,6 +23,8 @@ namespace BangSimulator.Game
             {
                 Players[i].Id = i;
             }
+
+            Deck = new Deck(players.Length);
         }
 
         public GameEngine(IAgent[] agents)
@@ -93,12 +95,14 @@ namespace BangSimulator.Game
             {
                 Players[i].Id = i;
             }
+
+            Deck = new Deck(agents.Length);
         }
     
         public GameResoult Play()
         {
 
-            //TODO: schufle players
+            //TODO: schufle roles and indexes
             List<Player> alivePlayers = Players.ToList();
             alivePlayers.ForEach(p => p.Reset());
             Deck.Reset();
@@ -116,8 +120,13 @@ namespace BangSimulator.Game
 
             var scherifID = alivePlayers.Find(p => p.Role == PlayerRole.Sheriff)!.Id;
 
+            int turn = 0;
+            List<int[]> lives = [];
+
             while (true)
             {
+                lives.Add(Players.Select(p => p.LifePoints).ToArray());
+                turn++;
 
                 bool skipTurn = false;
 
@@ -222,11 +231,16 @@ namespace BangSimulator.Game
                     result = CheckForWin(alivePlayers);
                 }
 
+
                 playerIndex++;
                 playerIndex = playerIndex % alivePlayers.Count;
             
                 if (result != null)
                 {
+                    result.Turns = turn;
+                    result.LivesData = lives;
+                    result.PlayerToPlayerBang = (int[,])Deck.PlayerToPlayerBang.Clone();
+
                     return result;
                 }
             }
@@ -788,17 +802,6 @@ namespace BangSimulator.Game
         private Player GetPlayerById(int id)
         {
             return Players.First(p => p.Id == id);
-        }
-    }
-
-    public class GameResoult
-    {
-        public PlayerRole WinningRole { get; set; }
-        public Player[] WinningPlayers { get; set; } = [];
-
-        public override string ToString()
-        {
-            return $"Winning Role: {WinningRole}, Winning Players: {string.Join(", ", WinningPlayers.Select(p => p.Id))}";
         }
     }
 }

@@ -1,11 +1,10 @@
-﻿using BangSimulator.Agent.Model;
-using BangSimulator.Game;
+﻿using BangSimulatorLib.Agent.Model;
+using BangSimulatorLib.Game;
 
-using RLMatrix; //LIB FOR REINFORCEMENT LEARNING
 
-namespace BangSimulator.Agent
+namespace BangSimulatorLib.Agent
 {
-    internal class PPOAgent : IAgent
+    public class PPOAgent : IAgent
     {
         //TODO:: implement
 

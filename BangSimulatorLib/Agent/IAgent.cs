@@ -1,8 +1,8 @@
 ﻿
-using BangSimulator.Agent.Model;
-using BangSimulator.Game;
+using BangSimulatorLib.Agent.Model;
+using BangSimulatorLib.Game;
 
-namespace BangSimulator.Agent
+namespace BangSimulatorLib.Agent
 {
     public interface IAgent
     {

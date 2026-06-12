@@ -1,16 +1,15 @@
-﻿using BangSimulator.Agent.Model;
-using BangSimulator.Game;
+﻿using BangSimulatorLib.Agent.Model;
+using BangSimulatorLib.Game;
 
 using TorchSharp;
 using TorchSharp.Modules;
 using static TorchSharp.torch;
 using static TorchSharp.torch.nn;
 
-using RLMatrix; //LIB FOR REINFORCEMENT LEARNING
 
-namespace BangSimulator.Agent
+namespace BangSimulatorLib.Agent
 {
-    internal class DQNAgentNet : IAgent
+    public class DQNAgentNet : IAgent
     {
         private DqnBrain? _brain;
 

@@ -1,0 +1,140 @@
+﻿<Window x:Class="BangSimulatorGui.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:BangSimulatorGui"
+        xmlns:ScottPlot="clr-namespace:ScottPlot.WPF;assembly=ScottPlot.WPF"
+        mc:Ignorable="d"
+        Title="BangSimulatorGui" Height="700" Width="1200">
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition/>
+            <RowDefinition Height="40"/>
+        </Grid.RowDefinitions>
+
+        <Grid Grid.Row="0">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition/>
+                <ColumnDefinition/>
+            </Grid.ColumnDefinitions>
+
+            <Grid Grid.Column="0">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="361*"/>
+                    <RowDefinition Height="243*"/>
+                </Grid.RowDefinitions>
+
+                <Image  Source="/Assets/background.jpeg" Stretch="Fill"/>
+
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="401*"/>
+                        <ColumnDefinition Width="199*"/>
+                    </Grid.ColumnDefinitions>
+
+                    <ScrollViewer HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto">
+                        <StackPanel x:Name="PlayersPlayingBox"/>
+                    </ScrollViewer>
+
+                    <ScrollViewer Grid.Column="1" HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto">
+                        <StackPanel x:Name="DeckMemoryBox"/>
+                    </ScrollViewer>
+                </Grid>
+
+                <Rectangle Grid.Row="1">
+                    <Rectangle.Stroke>
+                        <SolidColorBrush Color="{DynamicResource {x:Static SystemColors.MenuHighlightColorKey}}"/>
+                    </Rectangle.Stroke>
+                </Rectangle>
+
+                <Grid Grid.Row="1">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition/>
+                        <ColumnDefinition/>
+                    </Grid.ColumnDefinitions>
+
+                    <GroupBox Margin="2" Header="Controls">
+                        <StackPanel Margin="2" >
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock Width="100">Rounds:</TextBlock>
+                                <TextBox Width="175" x:Name="RoundsCount">10000</TextBox>
+                            </StackPanel>
+
+                            <Separator Margin="2"/>
+
+                            <TextBlock VerticalAlignment="Center" HorizontalAlignment="Center" FontSize="15" FontWeight="DemiBold">Controls</TextBlock>
+                            <StackPanel HorizontalAlignment="Center" Orientation="Horizontal">
+                                <Button Width="50" Margin="10">Start</Button>
+                                <Button Width="70" Margin="10">Steping</Button>
+                                <Button Width="50" Margin="10">Stop</Button>
+                            </StackPanel>
+
+                            <StackPanel HorizontalAlignment="Center" Orientation="Horizontal">
+                                <Button Width="150" Margin="10,5,10,10">Step</Button>
+                            </StackPanel>
+
+                        </StackPanel>
+                    </GroupBox>
+
+                    <GroupBox Grid.Column = "1" Margin="2" Header="Players">
+                        <ScrollViewer Margin="2" HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto">
+                            <StackPanel x:Name="PlayersSettings" HorizontalAlignment="Left">
+
+                            </StackPanel>
+                        </ScrollViewer>
+                    </GroupBox>
+
+                </Grid>
+            </Grid>
+
+            <Rectangle Grid.Column="1">
+                <Rectangle.Stroke>
+                    <SolidColorBrush Color="{DynamicResource {x:Static SystemColors.MenuHighlightColorKey}}"/>
+                </Rectangle.Stroke>
+            </Rectangle>
+
+            <Grid Grid.Column = "1">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="10*"/>
+                    <RowDefinition Height="5*"/>
+                </Grid.RowDefinitions>
+
+
+                <GroupBox Margin="2" Header="Statistics">
+                    <ScrollViewer HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto">
+                        <StackPanel Orientation="Horizontal" Margin="2" x:Name="StatisticsBox">
+
+                        </StackPanel>
+                    </ScrollViewer>
+                </GroupBox>
+                
+
+                <GroupBox Grid.Row="1" Header="Terminal" Margin="2">
+                    <ScrollViewer Margin="2">
+                        <TextBlock>
+                            >
+                        </TextBlock>
+                    </ScrollViewer>
+                </GroupBox>
+            </Grid>
+
+        </Grid>
+
+        <Rectangle Grid.Row="1">
+            <Rectangle.Stroke>
+                <SolidColorBrush Color="{DynamicResource {x:Static SystemColors.MenuHighlightColorKey}}"/>
+            </Rectangle.Stroke>
+        </Rectangle>
+
+        <Grid Grid.Row="1">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="150"/>
+                <ColumnDefinition/>
+            </Grid.ColumnDefinitions>
+
+            <TextBlock Grid.Column = "0" Margin="5" VerticalAlignment="Center" FontSize="14">Progress:  0/0</TextBlock>
+            <ProgressBar Grid.Column = "1"  Margin="5"/>
+        </Grid>
+    </Grid>
+</Window>

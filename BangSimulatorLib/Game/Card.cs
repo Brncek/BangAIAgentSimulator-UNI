@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Text;
 
-namespace BangSimulator.Game
+namespace BangSimulatorLib.Game
 {
     public class Card
     {

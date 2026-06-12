@@ -1,8 +1,8 @@
-﻿using BangSimulator.Agent.Model;
-using BangSimulator.Game;
-using Action = BangSimulator.Agent.Model.Action;
+﻿using BangSimulatorLib.Agent.Model;
+using BangSimulatorLib.Game;
+using Action = BangSimulatorLib.Agent.Model.Action;
 
-namespace BangSimulator.Agent
+namespace BangSimulatorLib.Agent
 {
     public class ScriptedAgent : IAgent
     {
