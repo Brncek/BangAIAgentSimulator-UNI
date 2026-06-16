@@ -26,7 +26,7 @@ namespace BangSimulator
             {
                 new Player(PlayerRole.Sheriff, new RandomAgent()),
                 new Player(PlayerRole.Renegade, new RandomAgent()),
-                new Player(PlayerRole.Bandit, new DQNAgentNet()),
+                new Player(PlayerRole.Bandit, new PythonAgent()),
                 new Player(PlayerRole.Bandit, new RandomAgent()),
                 new Player(PlayerRole.Deputy, new RandomAgent())
             };

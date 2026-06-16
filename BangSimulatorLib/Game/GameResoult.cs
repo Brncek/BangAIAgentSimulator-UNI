@@ -12,6 +12,8 @@
 
         public int[,] PlayerToPlayerBang { get; set; } = new int[0,0];
 
+        public DeckMemory[] LastRoundmemory { get; set; } = [];
+
         public override string ToString()
         {
             return $"Winning Role: {WinningRole}, Winning Players: {string.Join(", ", WinningPlayers.Select(p => p.Id))}";

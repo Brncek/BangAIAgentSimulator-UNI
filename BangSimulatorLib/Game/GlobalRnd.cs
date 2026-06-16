@@ -26,5 +26,12 @@ namespace BangSimulatorLib.Game
                 Rnd = new Random(seed);
         }
 
+        public static void SetSeed(int seed)
+        {
+            if (seed == -1)
+                Rnd = new Random();
+            else
+                Rnd = new Random(seed);
+        }
     }
 }

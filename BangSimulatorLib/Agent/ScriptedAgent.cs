@@ -198,5 +198,12 @@ namespace BangSimulatorLib.Agent
                 target = randomAction.PotencialTargets[GlobalRnd.Rnd.Next(randomAction.PotencialTargets.Length)]
             };
         }
+
+        public bool HasReward() => false;
+
+        public double GetCumulativeReward()
+        {
+            return 0;
+        }
     }
 }

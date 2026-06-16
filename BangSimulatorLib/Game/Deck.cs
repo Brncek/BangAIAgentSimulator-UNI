@@ -24,6 +24,11 @@ namespace BangSimulatorLib.Game
             MemSize = configuration.GetValue<int>("MemSize");
         }
 
+        public static void SetDeckMemory(int size)
+        {
+            MemSize = size;
+        }
+
         public Deck(int pCount)
         {
             deck = new Stack<Card>();

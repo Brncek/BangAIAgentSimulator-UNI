@@ -8,9 +8,9 @@ using BangSimulatorLib.Game;
 
 namespace BangSimulatorLib.Statistics
 {
-    internal class AgentProfiller : IAgent
+    public class AgentProfiller : IAgent
     {
-        private double time = 0;
+        private long ticks = 0;
         private int calls = 0;
         private IAgent agent;
 
@@ -45,7 +45,7 @@ namespace BangSimulatorLib.Statistics
 
             stopwatch.Stop();
 
-            time += stopwatch.ElapsedMilliseconds;
+            ticks += stopwatch.ElapsedTicks;
         
             stopwatch.Reset();
 
@@ -57,7 +57,27 @@ namespace BangSimulatorLib.Statistics
             stopwatch.Reset();
 
             calls = 0;
-            time = 0;
+            ticks = 0;
+        }
+
+        public long GetProfiledTicks()
+        {
+            return ticks;
+        }
+
+        public int GetCalls()
+        {
+            return calls;
+        }
+
+        public bool HasReward()
+        {
+            return agent.HasReward();
+        }
+
+        public double GetCumulativeReward()
+        {
+            return agent.GetCumulativeReward();
         }
     }
 }

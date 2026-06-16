@@ -13,6 +13,13 @@ namespace BangSimulatorLib.Agent
             throw new NotImplementedException();
         }
 
+        public double GetCumulativeReward()
+        {
+            throw new NotImplementedException();
+        }
+
+        public bool HasReward() => true;
+
         public void Reset()
         {
             throw new NotImplementedException();

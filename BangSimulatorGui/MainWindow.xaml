@@ -56,22 +56,42 @@
 
                     <GroupBox Margin="2" Header="Controls">
                         <StackPanel Margin="2" >
-                            <StackPanel Orientation="Horizontal">
+                            <StackPanel Orientation="Horizontal" Margin="5,2">
                                 <TextBlock Width="100">Rounds:</TextBlock>
-                                <TextBox Width="175" x:Name="RoundsCount">10000</TextBox>
+                                <TextBox Width="160" x:Name="RoundsCountBox">10000</TextBox>
                             </StackPanel>
 
-                            <Separator Margin="2"/>
+                            <StackPanel Orientation="Horizontal" Margin="5,2">
+                                <TextBlock Width="100">MemSize:</TextBlock>
+                                <TextBox Width="160" x:Name="MemSizeBox">25</TextBox>
+                            </StackPanel>
+
+                            <StackPanel Orientation="Horizontal" Margin="5,2">
+                                <TextBlock Width="100">Rnd seed:</TextBlock>
+                                <TextBox Width="160" x:Name="RndSeedBox">-1</TextBox>
+                            </StackPanel>
+
+                            <StackPanel Orientation="Horizontal" Margin="5,2">
+                                <TextBlock Width="100">AVG len:</TextBlock>
+                                <TextBox Width="160" x:Name="AVGLenBox">100</TextBox>
+                            </StackPanel>
+
+                            <StackPanel Orientation="Horizontal" Margin="5,2">
+                                <TextBlock Width="100">Profile simulator:</TextBlock>
+                                <CheckBox x:Name="ProfileSimulatorCheck"></CheckBox>
+                            </StackPanel>
+
+                            <Separator Margin="5"/>
 
                             <TextBlock VerticalAlignment="Center" HorizontalAlignment="Center" FontSize="15" FontWeight="DemiBold">Controls</TextBlock>
                             <StackPanel HorizontalAlignment="Center" Orientation="Horizontal">
-                                <Button Width="50" Margin="10">Start</Button>
-                                <Button Width="70" Margin="10">Steping</Button>
-                                <Button Width="50" Margin="10">Stop</Button>
+                                <Button Width="50" Margin="10" Click="Start_Click" x:Name="Start_BT" >Start</Button>
+                                <Button Width="70" Margin="10" Click="Stepping_CLick" x:Name="Stepping_BT">Steping</Button>
+                                <Button Width="50" Margin="10" Click="Stop_Click" IsEnabled="False" x:Name="Stop_BT">Stop</Button>
                             </StackPanel>
 
                             <StackPanel HorizontalAlignment="Center" Orientation="Horizontal">
-                                <Button Width="150" Margin="10,5,10,10">Step</Button>
+                                <Button Width="150" Margin="10,5,10,10" Click="Step_Click" IsEnabled="False" x:Name="Step_BT">Step</Button>
                             </StackPanel>
 
                         </StackPanel>
@@ -103,16 +123,16 @@
 
                 <GroupBox Margin="2" Header="Statistics">
                     <ScrollViewer HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto">
-                        <StackPanel Orientation="Horizontal" Margin="2" x:Name="StatisticsBox">
+                        <StackPanel Margin="2" x:Name="StatisticsPanel">
 
                         </StackPanel>
                     </ScrollViewer>
                 </GroupBox>
-                
+
 
                 <GroupBox Grid.Row="1" Header="Terminal" Margin="2">
                     <ScrollViewer Margin="2">
-                        <TextBlock>
+                        <TextBlock x:Name="TerminalBlock">
                             >
                         </TextBlock>
                     </ScrollViewer>
@@ -129,12 +149,12 @@
 
         <Grid Grid.Row="1">
             <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="150"/>
+                <ColumnDefinition Width="275"/>
                 <ColumnDefinition/>
             </Grid.ColumnDefinitions>
 
-            <TextBlock Grid.Column = "0" Margin="5" VerticalAlignment="Center" FontSize="14">Progress:  0/0</TextBlock>
-            <ProgressBar Grid.Column = "1"  Margin="5"/>
+            <TextBlock Grid.Column = "0" Margin="5,0,5,0" VerticalAlignment="Center" FontSize="14" x:Name="ProgressText" Height="18">Progress:  0/0</TextBlock>
+            <ProgressBar Grid.Column = "1"  Margin="5,5,5,5" x:Name="ProgressBar"/>
         </Grid>
     </Grid>
 </Window>

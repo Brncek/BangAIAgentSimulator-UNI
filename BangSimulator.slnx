@@ -1,5 +1,5 @@
 <Solution>
-  <Project Path="BangSimulator/BangSimulator.csproj" />
+  <Project Path="BangSimulator/BangSimulatorCLI.csproj" />
   <Project Path="BangSimulatorGui/BangSimulatorGui.csproj" Id="cc84fd08-3c24-4cbd-a45c-a7cbee01ab96" />
   <Project Path="BangSimulatorLib/BangSimulatorLib.csproj" Id="2602c59b-9584-4f1e-9b4f-c7f139ce5e9d" />
 </Solution>

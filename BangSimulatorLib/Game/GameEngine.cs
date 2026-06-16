@@ -102,7 +102,7 @@ namespace BangSimulatorLib.Game
         public GameResoult Play()
         {
 
-            //TODO: schufle roles and indexes
+            //NOTE: schufle roles and indexes
             List<Player> alivePlayers = Players.ToList();
             alivePlayers.ForEach(p => p.Reset());
             Deck.Reset();
@@ -237,6 +237,9 @@ namespace BangSimulatorLib.Game
             
                 if (result != null)
                 {
+                    lives.Add(Players.Select(p => p.LifePoints).ToArray());
+
+                    result.LastRoundmemory = Deck.DeckMemory.ToArray();
                     result.Turns = turn;
                     result.LivesData = lives;
                     result.PlayerToPlayerBang = (int[,])Deck.PlayerToPlayerBang.Clone();

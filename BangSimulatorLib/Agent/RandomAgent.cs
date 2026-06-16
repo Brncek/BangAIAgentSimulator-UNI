@@ -14,6 +14,13 @@ namespace BangSimulatorLib.Agent
         {
         }
 
+        public double GetCumulativeReward()
+        {
+            return 0;
+        }
+
+        public bool HasReward() => false;
+
         public void Reset()
         {
         }

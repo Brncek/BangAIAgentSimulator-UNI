@@ -229,6 +229,17 @@ namespace BangSimulatorLib.Agent
                 offset += read;
             }
         }
+
+        public bool HasReward() => true;
+
+        public double GetCumulativeReward()
+        {
+            SendData(new PythonAgentRequest { RequestType = PythonAgentRequestType.GetCumulativeReward });
+
+            var response = ReceveData();
+        
+            return response.CumulativeReward;
+        }
     }
 
 
@@ -245,6 +256,9 @@ namespace BangSimulatorLib.Agent
 
         [Key(2)]
         public int MaskedActionIndex { get; set; } = -1;
+
+        [Key(3)]
+        public float CumulativeReward { get; set; }
     }
 
     [MessagePackObject]
@@ -306,6 +320,7 @@ namespace BangSimulatorLib.Agent
     {
         Step,
         Reset,
-        GameOver
+        GameOver,
+        GetCumulativeReward
     }
 }

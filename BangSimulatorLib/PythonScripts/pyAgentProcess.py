@@ -32,6 +32,19 @@ def read_exact(pipe_handle, size):
 
     return buffer
 
+def sendData(pipe_handle, data : list):
+    response_bytes = msgpack.packb(data)
+
+    pipe_handle.write(
+        struct.pack(
+            "i",
+            len(response_bytes)
+            )
+    )
+
+    pipe_handle.write(response_bytes)
+    pipe_handle.flush()
+
 
 while True:
     size_data = read_exact(pipe, 4)
@@ -52,21 +65,15 @@ while True:
 
     if type == 0:
         reaction = agent.Step(request)
-
-        response_bytes = msgpack.packb(reaction)
-
-        pipe.write(
-            struct.pack(
-                "i",
-                len(response_bytes)
-                )
-        )
-
-        pipe.write(response_bytes)
-        pipe.flush()
+        sendData(pipe, reaction)
+        
 
     elif type == 1:
         agent.Reset()
+    elif type == 3:
+        res = agent.CumulativeReward() 
+        sendData(pipe, [0,0,0, res])
+
     else:
         agent.GameOver(request["playerRole"])
 
