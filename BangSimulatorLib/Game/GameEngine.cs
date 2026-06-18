@@ -244,6 +244,11 @@ namespace BangSimulatorLib.Game
                     result.LivesData = lives;
                     result.PlayerToPlayerBang = (int[,])Deck.PlayerToPlayerBang.Clone();
 
+                    foreach (var item in Players)
+                    {
+                        item.Agent.GameOver(result.WinningRole);
+                    }
+
                     return result;
                 }
             }

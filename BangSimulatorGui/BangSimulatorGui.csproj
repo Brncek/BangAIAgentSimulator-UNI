@@ -41,91 +41,91 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Content Include="Assets\background.jpeg">
+    <Resource Include="Assets\background.jpeg">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Assets\background3.png">
+    </Resource>
+    <Resource Include="Assets\background3.png">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Content>
+    </Resource>
     <Content Include="Assets\bang.ico" />
-    <Content Include="Assets\Cards\bang.png">
+    <Resource Include="Assets\Cards\bang.png">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Assets\Cards\barile.png">
+    </Resource>
+    <Resource Include="Assets\Cards\barile.png">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Assets\Cards\cat_balou.png">
+    </Resource>
+    <Resource Include="Assets\Cards\cat_balou.png">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Assets\Cards\diligenza.png">
+    </Resource>
+    <Resource Include="Assets\Cards\diligenza.png">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Assets\Cards\dinamite.png">
+    </Resource>
+    <Resource Include="Assets\Cards\dinamite.png">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Assets\Cards\duel.png">
+    </Resource>
+    <Resource Include="Assets\Cards\duel.png">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Assets\Cards\emporio.png">
+    </Resource>
+    <Resource Include="Assets\Cards\emporio.png">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Assets\Cards\gatling.png">
+    </Resource>
+    <Resource Include="Assets\Cards\gatling.png">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Assets\Cards\hledi_mirino.png">
+    </Resource>
+    <Resource Include="Assets\Cards\hledi_mirino.png">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Assets\Cards\indiani.png">
+    </Resource>
+    <Resource Include="Assets\Cards\indiani.png">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Assets\Cards\mustang.png">
+    </Resource>
+    <Resource Include="Assets\Cards\mustang.png">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Assets\Cards\panico.png">
+    </Resource>
+    <Resource Include="Assets\Cards\panico.png">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Assets\Cards\pivo.png">
+    </Resource>
+    <Resource Include="Assets\Cards\pivo.png">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Assets\Cards\prigione.png">
+    </Resource>
+    <Resource Include="Assets\Cards\prigione.png">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Assets\Cards\remington.png">
+    </Resource>
+    <Resource Include="Assets\Cards\remington.png">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Assets\Cards\rev_carabine.png">
+    </Resource>
+    <Resource Include="Assets\Cards\rev_carabine.png">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Assets\Cards\saloon.png">
+    </Resource>
+    <Resource Include="Assets\Cards\saloon.png">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Assets\Cards\schofield.png">
+    </Resource>
+    <Resource Include="Assets\Cards\schofield.png">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Assets\Cards\vedla_mancato.png">
+    </Resource>
+    <Resource Include="Assets\Cards\vedla_mancato.png">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Assets\Cards\volcanic.png">
+    </Resource>
+    <Resource Include="Assets\Cards\volcanic.png">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Assets\Cards\wells_fargo.png">
+    </Resource>
+    <Resource Include="Assets\Cards\wells_fargo.png">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Assets\Cards\winchester.png">
+    </Resource>
+    <Resource Include="Assets\Cards\winchester.png">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Assets\Roles\fuorilegge.png">
+    </Resource>
+    <Resource Include="Assets\Roles\fuorilegge.png">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Assets\Roles\rinnegato.png">
+    </Resource>
+    <Resource Include="Assets\Roles\rinnegato.png">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Assets\Roles\sceriffo.png">
+    </Resource>
+    <Resource Include="Assets\Roles\sceriffo.png">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Assets\Roles\vice.png">
+    </Resource>
+    <Resource Include="Assets\Roles\vice.png">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Content>
+    </Resource>
   </ItemGroup>
 
   <ItemGroup>

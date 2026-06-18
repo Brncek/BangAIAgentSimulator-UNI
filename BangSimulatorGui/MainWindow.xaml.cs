@@ -91,7 +91,7 @@ namespace BangSimulatorGui
             Stop_BT.Visibility = Visibility.Visible;
             Continue_BT.Visibility = Visibility.Visible;
             Continue_BT.IsEnabled = false;
-            PlayersSettings.IsEnabled = false;
+            agentSettings.ForEach(a => a.DisableEdit(false,false) );
 
             SetProgress(0, roundsCount);
 
@@ -112,6 +112,15 @@ namespace BangSimulatorGui
             inWait = false;
             Stop_BT.IsEnabled = true;
             Continue_BT.IsEnabled = false;
+            agentSettings.ForEach(a => a.DisableEdit(false, false));
+
+            var agents = lastGame!.Players.Select(p => p.Agent).ToArray();
+            var evals = agentSettings.Select(a => a.IsEval()).ToArray();
+
+            for (int i  = 0; i < agents.Count(); i++)
+            {
+                agents[i].SetEval(evals[i]);
+            }
 
             SetProgress(lastResults.Count, roundsCount + lastResults.Count);
 
@@ -142,6 +151,8 @@ namespace BangSimulatorGui
 
             Stop_BT.IsEnabled = true;
             Continue_BT.IsEnabled = true;
+
+            agentSettings.ForEach(a => a.DisableEdit(false, true));
         }
 
         private void Reset()
@@ -162,7 +173,7 @@ namespace BangSimulatorGui
             Continue_BT.Visibility = Visibility.Collapsed;
             Stop_BT.Visibility = Visibility.Collapsed;
 
-            PlayersSettings.IsEnabled = true;
+            agentSettings.ForEach(a => a.DisableEdit(true, true));
         }
 
         private void SetProgress(int done, int total)

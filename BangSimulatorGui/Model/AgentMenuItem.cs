@@ -44,14 +44,15 @@ namespace BangSimulatorGui.Model
 
             var nameBox = new TextBlock();
             nameBox.Text = name;
-            nameBox.FontSize = 14;
+            nameBox.FontSize = 15;
             nameBox.Margin = new Thickness(2);
+            nameBox.FontWeight = FontWeights.DemiBold;
 
             agentTypeBox.HorizontalAlignment = HorizontalAlignment.Left;
             agentTypeBox.ItemsSource = Enum.GetValues(typeof(AgentType));
             agentTypeBox.SelectedIndex = 0;
             agentTypeBox.Margin = new Thickness(2);
-            agentTypeBox.Width = 100;
+            agentTypeBox.Width = 195;
 
 
             StackPanel[] panels =
@@ -77,7 +78,7 @@ namespace BangSimulatorGui.Model
             comboboxRole.ItemsSource = Enum.GetValues(typeof(AgentRole));
             comboboxRole.SelectedIndex = 4;
             comboboxRole.Margin = new Thickness(2);
-            comboboxRole.Width = 100;
+            comboboxRole.Width = 195;
 
             comboboxRole.LostFocus += (x, y) =>
             {
@@ -93,7 +94,6 @@ namespace BangSimulatorGui.Model
             this.Children.Add(comboboxRole);
 
             this.Children.Add(agentTypeBox);
-            this.Children.Add(stepWaitPanel);
 
             agentTypeBox.Visibility = Visibility.Collapsed;
             stepWaitPanel.Visibility = Visibility.Collapsed;
@@ -104,7 +104,7 @@ namespace BangSimulatorGui.Model
             pyIdLabel.Text = "Py agent ID";
             pyIdLabel.Width = 75;
             
-            pythonIdBox.Width = 100;
+            pythonIdBox.Width = 120;
 
             pythonIdBox.LostFocus += (x, y) =>
             {
@@ -204,6 +204,8 @@ namespace BangSimulatorGui.Model
 
             evalPanel.Visibility = Visibility.Collapsed;
             this.Children.Add(evalPanel);
+
+            this.Children.Add(stepWaitPanel);
         }
 
         public void PreselectRole(int index)
@@ -252,7 +254,10 @@ namespace BangSimulatorGui.Model
                 agent.Load(loadPathBox.Text);
             }
 
-            //TODO:: save
+            if (savePathBox.Text != string.Empty)
+            {
+                agent.Save(savePathBox.Text);
+            }
 
             if (profileAgent)
             {
@@ -265,6 +270,43 @@ namespace BangSimulatorGui.Model
             }
 
             return new Player(role, agent);
+        }
+
+        public void DisableEdit(bool disable, bool keepEval)
+        {
+            if (!disable)
+            {
+                agentTypeBox.IsEnabled = false;
+                comboboxRole.IsEnabled = false;
+                stepWaitPanel.IsEnabled = false;
+                pythonIdPanel.IsEnabled = false;
+                savePathPanel.IsEnabled = false;
+                loadPathPanel.IsEnabled = false;
+
+                if (keepEval)
+                {
+                    evalPanel.IsEnabled = true;
+                }
+                else
+                {
+                    evalPanel.IsEnabled = false;
+                }
+            }
+            else
+            {
+                agentTypeBox.IsEnabled = true;
+                comboboxRole.IsEnabled = true;
+                stepWaitPanel.IsEnabled = true;
+                pythonIdPanel.IsEnabled = true;
+                savePathPanel.IsEnabled = true;
+                loadPathPanel.IsEnabled = true;
+                evalPanel.IsEnabled = true;
+            }
+        }
+
+        public bool IsEval()
+        {
+            return evalModCheckBox.IsChecked!.Value;
         }
 
         private void LostFocusOV()

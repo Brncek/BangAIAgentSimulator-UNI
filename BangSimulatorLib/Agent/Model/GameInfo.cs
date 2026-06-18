@@ -47,7 +47,7 @@ namespace BangSimulatorLib.Agent.Model
 
             if (includeMemory)
             {
-                //TODO: Encode DeckMemory
+                //NOTE: Encode DeckMemory
             }
 
             return (features.ToArray(), BuildMask());

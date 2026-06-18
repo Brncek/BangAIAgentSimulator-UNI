@@ -22,6 +22,13 @@ namespace BangSimulatorLib.Agent
 
         public bool Training { get; set; } = true;
 
+        private bool eval = false;
+
+        private List<float> rewards = [];
+
+        private string savePath = string.Empty;
+        private double lastRewardAVG = 0.0;
+
         public AgentAction Step(GameInfo gameInfo)
         {
             var (state, mask) = gameInfo.Encode();
@@ -35,7 +42,11 @@ namespace BangSimulatorLib.Agent
                 brain.Remember(new Transition(
                     prevState!, prevAction, pendingReward,
                     state, mask, done: false));
-                brain.Learn();
+                
+                if (!eval)
+                {
+                    brain.Learn();
+                }
             }
 
             int action = brain.SelectAction(state, mask, greedy: !Training);
@@ -71,6 +82,8 @@ namespace BangSimulatorLib.Agent
         {
             if (!hasPending || !Training || brain == null) return;
 
+            if (lastRole == PlayerRole.Deputy) lastRole = PlayerRole.Sheriff;
+
             float finalReward = pendingReward +
                 (prevState != null && winingRole == lastRole ? 1f : -1f);
 
@@ -78,7 +91,33 @@ namespace BangSimulatorLib.Agent
             brain.Remember(new Transition(
                 prevState!, prevAction, finalReward,
                 prevState!, prevMask!, done: true));
-            brain.Learn();
+            
+            if(!eval)
+            {
+                brain.Learn();
+            }
+
+            rewards.Add(finalReward);
+
+            if (!string.IsNullOrEmpty(savePath))
+            {
+                double avg;
+
+                if (rewards.Count > 100) avg = rewards.TakeLast(100).Sum() / 100.0;
+                else avg = rewards.Sum() / (float)rewards.Count();
+
+                if (avg > lastRewardAVG)
+                {
+                    lastRewardAVG = avg;
+                    try
+                    {
+                        InternalSave(savePath); //NOTE: notifi if unable to save
+                    }
+                    catch
+                    { }
+                }
+            }
+
 
             hasPending = false;
         }
@@ -86,6 +125,8 @@ namespace BangSimulatorLib.Agent
         private PlayerRole lastRole;
         public void Reset()
         {
+            rewards = [];
+            eval = false;
             hasPending = false;
             prevState = null;
             prevMask = null;
@@ -93,7 +134,12 @@ namespace BangSimulatorLib.Agent
             pendingReward = 0f;
         }
 
-        public void Save(string path) => brain?.Save(path);
+        public void Save(string path)
+        {
+            savePath = path;
+        }
+
+        public void InternalSave(string path) => brain?.Save(path);
         public void Load(string path)
         {
             brain?.Load(path);
@@ -103,12 +149,12 @@ namespace BangSimulatorLib.Agent
 
         public void SetEval(bool eval)
         {
-            throw new NotImplementedException(); //TODO: IMPLEMENT
+            this.eval = eval;
         }
 
         public List<float> GetRewards()
         {
-            throw new NotImplementedException(); //TODO: IMPLEMENT
+            return rewards;
         }
     }
 
