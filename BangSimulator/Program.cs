@@ -33,6 +33,8 @@ namespace BangSimulator
 
             GameEngine game = new GameEngine(playerList);
 
+            new PythonAgent().SetEval(true);
+
             int sheriffWins = 0;
             int sheriffHins = 0;
             int renegadeWins = 0;

@@ -26,7 +26,7 @@ class pyAgent:
         # implement this method
         return [0.0]
 
-    def SetEval(isEval : bool):
+    def SetEval(self, isEval):
         pass
 
     def Save(self, path):
