@@ -85,13 +85,14 @@
 
                             <TextBlock VerticalAlignment="Center" HorizontalAlignment="Center" FontSize="15" FontWeight="DemiBold">Controls</TextBlock>
                             <StackPanel HorizontalAlignment="Center" Orientation="Horizontal">
-                                <Button Width="50" Margin="10" Click="Start_Click" x:Name="Start_BT" >Start</Button>
+                                <Button Width="70" Margin="10" Click="Start_Click" x:Name="Start_BT" >Start</Button>
                                 <Button Width="70" Margin="10" Click="Stepping_CLick" x:Name="Stepping_BT">Steping</Button>
-                                <Button Width="50" Margin="10" Click="Stop_Click" IsEnabled="False" x:Name="Stop_BT">Stop</Button>
+                                <Button Width="50" Margin="10" Click="Stop_Click" Visibility="Collapsed" x:Name="Stop_BT">Stop</Button>
                             </StackPanel>
 
                             <StackPanel HorizontalAlignment="Center" Orientation="Horizontal">
-                                <Button Width="150" Margin="10,5,10,10" Click="Step_Click" IsEnabled="False" x:Name="Step_BT">Step</Button>
+                                <Button Width="150" Margin="10,5,10,10" Click="Step_Click" Visibility="Collapsed" x:Name="Step_BT">Step</Button>
+                                <Button Width="150" Margin="10,5,10,10" Click="Continue_Click" Visibility="Collapsed" x:Name="Continue_BT">Continue</Button>
                             </StackPanel>
 
                         </StackPanel>

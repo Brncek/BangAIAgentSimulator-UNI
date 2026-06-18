@@ -6,21 +6,36 @@ namespace BangSimulatorLib.Agent
 {
     public class PPOAgent : IAgent
     {
-        //TODO:: implement
+        //NOTE:: implement
 
         public void GameOver(PlayerRole winingRole)
         {
             throw new NotImplementedException();
         }
 
-        public double GetCumulativeReward()
+        public List<float> GetRewards()
         {
             throw new NotImplementedException();
         }
 
         public bool HasReward() => true;
 
+        public void Load(string path)
+        {
+            throw new NotImplementedException();
+        }
+
         public void Reset()
+        {
+            throw new NotImplementedException();
+        }
+
+        public void Save(string pathFolder)
+        {
+            throw new NotImplementedException();
+        }
+
+        public void SetEval(bool eval)
         {
             throw new NotImplementedException();
         }

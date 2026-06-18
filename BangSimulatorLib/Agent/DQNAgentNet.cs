@@ -20,8 +20,6 @@ namespace BangSimulatorLib.Agent
 
         private float pendingReward;
 
-        private double cumulativeReward;
-
         public bool Training { get; set; } = true;
 
         public AgentAction Step(GameInfo gameInfo)
@@ -76,7 +74,6 @@ namespace BangSimulatorLib.Agent
             float finalReward = pendingReward +
                 (prevState != null && winingRole == lastRole ? 1f : -1f);
 
-            cumulativeReward += finalReward;
 
             brain.Remember(new Transition(
                 prevState!, prevAction, finalReward,
@@ -94,7 +91,6 @@ namespace BangSimulatorLib.Agent
             prevMask = null;
             prevAction = -1;
             pendingReward = 0f;
-            cumulativeReward = 0;
         }
 
         public void Save(string path) => brain?.Save(path);
@@ -105,26 +101,26 @@ namespace BangSimulatorLib.Agent
 
         public bool HasReward() => true;
 
-        public double GetCumulativeReward()
+        public void SetEval(bool eval)
         {
-            return cumulativeReward;
+            throw new NotImplementedException(); //TODO: IMPLEMENT
+        }
+
+        public List<float> GetRewards()
+        {
+            throw new NotImplementedException(); //TODO: IMPLEMENT
         }
     }
 
 
-    public readonly struct Transition
+    public readonly struct Transition(float[] s, int a, float r, float[] ns, float[] nm, bool done)
     {
-        public readonly float[] State;
-        public readonly int Action;
-        public readonly float Reward;
-        public readonly float[] NextState;
-        public readonly float[] NextMask;
-        public readonly bool Done;
-
-        public Transition(float[] s, int a, float r, float[] ns, float[] nm, bool done)
-        {
-            State = s; Action = a; Reward = r; NextState = ns; NextMask = nm; Done = done;
-        }
+        public readonly float[] State = s;
+        public readonly int Action = a;
+        public readonly float Reward = r;
+        public readonly float[] NextState = ns;
+        public readonly float[] NextMask = nm;
+        public readonly bool Done = done;
     }
 
     public sealed class DqnBrain
@@ -137,7 +133,7 @@ namespace BangSimulatorLib.Agent
         private readonly Sequential targetNet;
         private readonly optim.Optimizer optimizer;
 
-        private readonly List<Transition> memory = new();
+        private readonly List<Transition> memory = [];
         private readonly int memoryCapacity;
         private int memoryHead;
 
@@ -151,7 +147,7 @@ namespace BangSimulatorLib.Agent
         private int stepsDone;
         private int learnCount;
 
-        public DqnBrain( //TODO: loadFrom config
+        public DqnBrain( 
             int stateSize,
             int actionSize,
             int width = 256,
@@ -204,9 +200,9 @@ namespace BangSimulatorLib.Agent
                 return RandomLegal(mask);
 
             using var _ = no_grad();
-            using var s = tensor(state, new long[] { 1, stateSize }, device: _device);
+            using var s = tensor(state, [1, stateSize], device: _device);
             using var q = policyNet.forward(s).squeeze(0);         
-            using var m = tensor(mask, new long[] { actionSize }, device: _device);
+            using var m = tensor(mask, [actionSize], device: _device);
             
             using var neg = full_like(q, -1e9f);
             using var masked = where(m > 0.5f, q, neg);
@@ -258,12 +254,12 @@ namespace BangSimulatorLib.Agent
                 notDone[i] = batch[i].Done ? 0f : 1f;
             }
 
-            using var s = tensor(states, new long[] { batchSize, stateSize }, device: _device);
-            using var ns = tensor(nextStates, new long[] { batchSize, stateSize }, device: _device);
-            using var nm = tensor(nextMasks, new long[] { batchSize, actionSize }, device: _device);
-            using var a = tensor(actions, new long[] { batchSize, 1 }, device: _device);
-            using var r = tensor(rewards, new long[] { batchSize }, device: _device);
-            using var nd = tensor(notDone, new long[] { batchSize }, device: _device);
+            using var s = tensor(states, [batchSize, stateSize], device: _device);
+            using var ns = tensor(nextStates, [batchSize, stateSize], device: _device);
+            using var nm = tensor(nextMasks, [batchSize, actionSize], device: _device);
+            using var a = tensor(actions, [batchSize, 1], device: _device);
+            using var r = tensor(rewards, [batchSize], device: _device);
+            using var nd = tensor(notDone, [batchSize], device: _device);
 
             using var qAll = policyNet.forward(s);                  
             using var qTaken = qAll.gather(1, a).squeeze(1);         

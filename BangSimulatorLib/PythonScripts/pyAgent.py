@@ -13,7 +13,7 @@ class pyAgent:
 
         random_action = random.choice(gameInfo["avanableActions"])
         target = random.choice(random_action[1])
-        resoult = [random_action[0], target, -1 , 0.0] #if anything else than -1 the maskedActions Decoder will be used 
+        resoult = [random_action[0], target, -1 , [0.0]] #if anything else than -1 the maskedActions Decoder will be used 
 
         return resoult
 
@@ -22,6 +22,17 @@ class pyAgent:
         # implement this method
         pass
 
-    def CumulativeReward(self) -> float:
+    def Rewards(self) -> list:
         # implement this method
-        return 0
+        return [0.0]
+
+    def SetEval(isEval : bool):
+        pass
+
+    def Save(self, path):
+        # implement this method
+        pass
+
+    def Load(self, path):
+        # implement this method
+        pass

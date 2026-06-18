@@ -77,5 +77,47 @@ namespace BangSimulatorLib.Statistics
 
             return list;
         }
+
+        public static List<float[]> WinRatesAVGs(List<GameResoult> resoults, int AVGlen)
+        {
+            var list = new List<float[]>();
+
+            for (int i = 0; i < 3; i++)
+            {
+                list.Add(new float[resoults.Count]);
+            }
+
+            for (int i = 0; i < resoults.Count; i++)
+            {
+                int scherofAvg = 0;
+                int banditAvg = 0;
+                int renegadeAvg = 0;
+
+                int count = 0;
+
+                for (int j = 0; j < AVGlen && i - j >= 0; j++)
+                {
+                    var winner = resoults[i - j].WinningRole;
+
+                    switch(winner)
+                    {
+                        case PlayerRole.Sheriff:
+                            scherofAvg++; break;
+                        case PlayerRole.Bandit:
+                            banditAvg++; break;
+                        default:
+                            renegadeAvg++; break;
+                    }
+
+                    count++;
+                } 
+
+                list[0][i] = scherofAvg / (float)count * 100;
+                list[1][i] = banditAvg / (float)count * 100;
+                list[2][i] = renegadeAvg / (float)count * 100;
+            }
+
+            return list;
+        }
     }
 }

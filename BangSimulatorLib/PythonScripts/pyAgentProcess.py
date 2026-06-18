@@ -66,14 +66,24 @@ while True:
     if type == 0:
         reaction = agent.Step(request)
         sendData(pipe, reaction)
-        
 
     elif type == 1:
         agent.Reset()
+
+    elif type == 2:
+        agent.GameOver(request["playerRole"])
+
     elif type == 3:
-        res = agent.CumulativeReward() 
+        res = agent.Rewards() 
         sendData(pipe, [0,0,0, res])
 
-    else:
-        agent.GameOver(request["playerRole"])
+    elif type == 4:
+        agent.SetEval(request["eval"])
+
+    elif type == 5:
+        agent.Save(request["path"])
+
+    elif type == 6:
+        agent.Load(request["path"])
+
 

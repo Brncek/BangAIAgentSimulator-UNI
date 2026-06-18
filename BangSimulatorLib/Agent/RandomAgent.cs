@@ -14,14 +14,27 @@ namespace BangSimulatorLib.Agent
         {
         }
 
-        public double GetCumulativeReward()
+
+        public List<float> GetRewards()
         {
-            return 0;
+            return [];
         }
 
         public bool HasReward() => false;
 
+        public void Load(string path)
+        {
+        }
+
         public void Reset()
+        {
+        }
+
+        public void Save(string pathFolder)
+        {
+        }
+
+        public void SetEval(bool eval)
         {
         }
 

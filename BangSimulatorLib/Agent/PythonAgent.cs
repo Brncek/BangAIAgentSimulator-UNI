@@ -1,12 +1,12 @@
 ﻿using System.Diagnostics;
+using System.IO.Pipes;
 using System.Net.Sockets;
 using BangSimulatorLib.Agent.Model;
 using BangSimulatorLib.Game;
+using ICSharpCode.SharpZipLib.Core;
 using MessagePack;
-using Microsoft.Extensions.Configuration;
-
-using System.IO.Pipes;
 using MessagePack.Formatters;
+using Microsoft.Extensions.Configuration;
 
 namespace BangSimulatorLib.Agent
 {
@@ -17,7 +17,9 @@ namespace BangSimulatorLib.Agent
 
         private NamedPipeServerStream pipe;
 
-        public PythonAgent()
+        private int pythonAgentID;
+
+        public PythonAgent(int pythonAgentID = 0)
         {
             var configuration = new ConfigurationBuilder()
                 .SetBasePath(Directory.GetCurrentDirectory())
@@ -26,6 +28,7 @@ namespace BangSimulatorLib.Agent
 
             bool pythonDebug = configuration.GetValue<bool>("PythonDebugConsole");
 
+            this.pythonAgentID = pythonAgentID;
 
             string pipeName =$"PyAgentPipe_{Guid.NewGuid()}";
 
@@ -56,12 +59,12 @@ namespace BangSimulatorLib.Agent
 
         public void GameOver(PlayerRole winingRole)
         {
-            SendData(new PythonAgentRequest { RequestType = PythonAgentRequestType.GameOver, PlayerRole = winingRole });
+            SendData(new PythonAgentRequest(pythonAgentID) { RequestType = PythonAgentRequestType.GameOver, PlayerRole = winingRole });
         }
 
         public void Reset()
         {
-            SendData(new PythonAgentRequest { RequestType = PythonAgentRequestType.Reset });
+            SendData(new PythonAgentRequest(pythonAgentID) { RequestType = PythonAgentRequestType.Reset });
         }
 
         public AgentAction Step(GameInfo gameInfo)
@@ -107,7 +110,7 @@ namespace BangSimulatorLib.Agent
 
             var embeded = gameInfo.Encode();
 
-            var agentRequest = new PythonAgentRequest
+            var agentRequest = new PythonAgentRequest(pythonAgentID)
             {
                 RequestType = PythonAgentRequestType.Step,
                 PlayerRole = gameInfo.PlayerRole,
@@ -232,13 +235,43 @@ namespace BangSimulatorLib.Agent
 
         public bool HasReward() => true;
 
-        public double GetCumulativeReward()
+        public void SetEval(bool eval)
         {
-            SendData(new PythonAgentRequest { RequestType = PythonAgentRequestType.GetCumulativeReward });
+            SendData(new PythonAgentRequest(pythonAgentID)
+            {
+                RequestType = PythonAgentRequestType.Eval,
+                Eval = eval
+            });
+        }
 
-            var response = ReceveData();
-        
-            return response.CumulativeReward;
+        public List<float> GetRewards()
+        {
+            SendData(new PythonAgentRequest(pythonAgentID)
+            {
+                RequestType = PythonAgentRequestType.Revards
+            });
+
+            var data = ReceveData();
+
+            return data.Rewards;
+        }
+
+        public void Save(string pathFolder)
+        {
+            SendData(new PythonAgentRequest(pythonAgentID)
+            { 
+                RequestType = PythonAgentRequestType.Save,
+                Path = pathFolder
+            });
+        }
+
+        public void Load(string path)
+        {
+            SendData(new PythonAgentRequest(pythonAgentID)
+            {
+                RequestType = PythonAgentRequestType.Load
+                , Path = path
+            });
         }
     }
 
@@ -258,12 +291,17 @@ namespace BangSimulatorLib.Agent
         public int MaskedActionIndex { get; set; } = -1;
 
         [Key(3)]
-        public float CumulativeReward { get; set; }
+        public List<float> Rewards { get; set; } = [];
     }
 
     [MessagePackObject]
     public class PythonAgentRequest
     {
+        public PythonAgentRequest(int agentId)
+        {
+            this.AgentId = agentId;
+        }
+
         [Key("requestType")]
         public PythonAgentRequestType RequestType { get; set; }
 
@@ -293,6 +331,15 @@ namespace BangSimulatorLib.Agent
 
         [Key("embededCardMask")]
         public float[] EmbededCardMask { get; set; } = [];
+
+        [Key("eval")]
+        public bool Eval { get; set; } = false;
+
+        [Key("path")]
+        public string Path { get; set; } = string.Empty;
+
+        [Key("agentId")]
+        public int AgentId { get; set; } = 0;
     }
 
     [MessagePackObject]
@@ -321,6 +368,9 @@ namespace BangSimulatorLib.Agent
         Step,
         Reset,
         GameOver,
-        GetCumulativeReward
+        Revards,
+        Eval,
+        Save,
+        Load
     }
 }

@@ -75,9 +75,24 @@ namespace BangSimulatorLib.Statistics
             return agent.HasReward();
         }
 
-        public double GetCumulativeReward()
+        public void SetEval(bool eval)
         {
-            return agent.GetCumulativeReward();
+            agent.SetEval(eval);
+        }
+
+        public List<float> GetRewards()
+        {
+            return agent.GetRewards();
+        }
+
+        public void Save(string pathFolder)
+        {
+            agent.Save(pathFolder);
+        }
+
+        public void Load(string path)
+        {
+            agent.Load(path);
         }
     }
 }
