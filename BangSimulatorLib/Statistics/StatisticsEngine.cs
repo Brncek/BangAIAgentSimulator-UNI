@@ -78,6 +78,27 @@ namespace BangSimulatorLib.Statistics
             return list;
         }
 
+        public static float[] RewardsAVG(List<float> rewars, int AVGlen)
+        {
+            float[] ret = new float[rewars.Count];
+
+            for (int i = 0; i < rewars.Count; i++)
+            {
+                float sum = 0;
+                int count = 0;
+
+                for (int j = 0;j < AVGlen && i - j >= 0; j++)
+                {
+                    sum += rewars[i - j];
+                    count++;
+                }
+
+                ret[i] = sum / count;
+            }
+
+            return ret;
+        }
+
         public static List<float[]> WinRatesAVGs(List<GameResoult> resoults, int AVGlen)
         {
             var list = new List<float[]>();

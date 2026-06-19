@@ -1,5 +1,6 @@
 ﻿using System.Diagnostics;
 using System.IO;
+using System.Numerics;
 using System.Reflection.Emit;
 using System.Security.Cryptography.X509Certificates;
 using System.Text;
@@ -459,6 +460,30 @@ namespace BangSimulatorGui
             WriteLnToTerminal($"Renegade last AVG wins: {winRatesAvg[2][winRatesAvg[0].Length - 1]:F2}%");
 
             StatisticsPanel.Children.Add(otherStats);
+
+            StackPanel rewardStats = new StackPanel()
+            {
+                Margin = new Thickness(5),
+                Orientation = System.Windows.Controls.Orientation.Horizontal
+            };
+
+            var agents = lastGame!.Players.Select(p => p.Agent).ToArray();
+
+            List<List<float>?> rewards = agents.Select(a => a.HasReward() ? a.GetRewards() : null).ToList();
+
+            for (int i = 0; i < rewards.Count; i++)
+            {
+                if (rewards[i] != null && rewards[i]!.Count > 2)
+                {
+                    float[] avgs = StatisticsEngine.RewardsAVG(rewards[i]!, AVGlen);
+                    
+                    var rewardGraph = new LineGraph($"PLAYER{ i + 1 } {playerLabels[i]!} AVG REWARDS", avgs);
+                    rewardStats.Children.Add(rewardGraph);
+                }
+            }
+
+
+            StatisticsPanel.Children.Add(rewardStats);
 
             //TODO: last deck memory
         }
