@@ -273,7 +273,7 @@ namespace BangSimulatorGui.Model
 
             if (savePathBox.Text != string.Empty)
             {
-                agent.Save(savePathBox.Text);
+                agent.SetAutoSavePath(savePathBox.Text);
             }
 
             if (profileAgent)
@@ -289,7 +289,7 @@ namespace BangSimulatorGui.Model
             return new Player(role, agent);
         }
 
-        public void DisableEdit(bool disable, bool keepEval)
+        public void DisableEdit(bool disable, bool continueMod)
         {
             if (!disable)
             {
@@ -297,17 +297,18 @@ namespace BangSimulatorGui.Model
                 comboboxRole.IsEnabled = false;
                 stepWaitPanel.IsEnabled = false;
                 pythonIdPanel.IsEnabled = false;
-                savePathPanel.IsEnabled = false;
                 loadPathPanel.IsEnabled = false;
                 terminalPanel.IsEnabled = false;
 
-                if (keepEval)
+                if (continueMod)
                 {
                     evalPanel.IsEnabled = true;
+                    savePathPanel.IsEnabled = true;
                 }
                 else
                 {
                     evalPanel.IsEnabled = false;
+                    savePathPanel.IsEnabled = false;
                 }
             }
             else
@@ -326,6 +327,11 @@ namespace BangSimulatorGui.Model
         public bool IsEval()
         {
             return evalModCheckBox.IsChecked!.Value;
+        }
+
+        public string SaveLocation()
+        {
+            return savePathBox.Text;
         }
 
         private void LostFocusOV()

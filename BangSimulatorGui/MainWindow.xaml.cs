@@ -119,10 +119,12 @@ namespace BangSimulatorGui
 
             var agents = lastGame!.Players.Select(p => p.Agent).ToArray();
             var evals = agentSettings.Select(a => a.IsEval()).ToArray();
+            var savePaths = agentSettings.Select(a => a.SaveLocation()).ToArray();
 
             for (int i  = 0; i < agents.Count(); i++)
             {
                 agents[i].SetEval(evals[i]);
+                agents[i].SetAutoSavePath(savePaths[i]);
             }
 
             SetProgress(lastResults.Count, roundsCount + lastResults.Count);

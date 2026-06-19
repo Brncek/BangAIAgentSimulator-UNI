@@ -19,7 +19,7 @@ namespace BangSimulatorLib.Agent
 
         public List<float> GetRewards();
 
-        public void Save(string pathFolder);
+        public void SetAutoSavePath(string pathFolder);
 
         public void Load(string path);
     }

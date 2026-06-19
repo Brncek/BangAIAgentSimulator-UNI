@@ -134,7 +134,7 @@ namespace BangSimulatorLib.Agent
             pendingReward = 0f;
         }
 
-        public void Save(string path)
+        public void SetAutoSavePath(string path)
         {
             savePath = path;
         }

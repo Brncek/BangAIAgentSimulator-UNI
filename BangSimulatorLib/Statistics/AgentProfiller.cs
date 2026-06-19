@@ -85,9 +85,9 @@ namespace BangSimulatorLib.Statistics
             return agent.GetRewards();
         }
 
-        public void Save(string pathFolder)
+        public void SetAutoSavePath(string pathFolder)
         {
-            agent.Save(pathFolder);
+            agent.SetAutoSavePath(pathFolder);
         }
 
         public void Load(string path)

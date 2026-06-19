@@ -30,7 +30,7 @@ namespace BangSimulatorLib.Agent
             throw new NotImplementedException();
         }
 
-        public void Save(string pathFolder)
+        public void SetAutoSavePath(string pathFolder)
         {
             throw new NotImplementedException();
         }

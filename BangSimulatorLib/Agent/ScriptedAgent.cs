@@ -210,7 +210,7 @@ namespace BangSimulatorLib.Agent
             return [];
         }
 
-        public void Save(string pathFolder)
+        public void SetAutoSavePath(string pathFolder)
         {
         }
 

@@ -282,7 +282,7 @@ namespace BangSimulatorLib.Agent
             return data.Rewards;
         }
 
-        public void Save(string pathFolder)
+        public void SetAutoSavePath(string pathFolder)
         {
             SendData(new PythonAgentRequest(pythonAgentID)
             { 
