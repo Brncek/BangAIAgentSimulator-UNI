@@ -45,8 +45,10 @@ def sendData(pipe_handle, data : list):
     pipe_handle.write(response_bytes)
     pipe_handle.flush()
 
+print("PYAGENT STARTED");
 
 while True:
+
     size_data = read_exact(pipe, 4)
 
     request_size = struct.unpack(

@@ -5,7 +5,7 @@ namespace BangSimulator
 {
     internal class Program
     {
-        private static readonly int NumGames = 25000;
+        private static readonly int NumGames = 10000;
 
         static void Main(string[] args)
         {
@@ -26,14 +26,13 @@ namespace BangSimulator
             {
                 new Player(PlayerRole.Sheriff, new RandomAgent()),
                 new Player(PlayerRole.Renegade, new RandomAgent()),
-                new Player(PlayerRole.Bandit, new PythonAgent()),
+                new Player(PlayerRole.Bandit, new PythonAgent( (s) => {}, true )),
                 new Player(PlayerRole.Bandit, new RandomAgent()),
                 new Player(PlayerRole.Deputy, new RandomAgent())
             };
 
             GameEngine game = new GameEngine(playerList);
 
-            new PythonAgent().SetEval(true);
 
             int sheriffWins = 0;
             int sheriffHins = 0;

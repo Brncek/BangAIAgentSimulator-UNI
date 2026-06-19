@@ -132,11 +132,21 @@
 
 
                 <GroupBox Grid.Row="1" Header="Terminal" Margin="2">
-                    <ScrollViewer Margin="2">
-                        <TextBlock x:Name="TerminalBlock">
-                            >
-                        </TextBlock>
-                    </ScrollViewer>
+                    <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition/>
+                            <RowDefinition Height="25"/>
+                        </Grid.RowDefinitions>
+
+                        <ScrollViewer Margin="2">
+                            <TextBlock x:Name="TerminalBlock">
+        >
+                            </TextBlock>
+                        </ScrollViewer>
+
+                        <Button Grid.Row="1" Click="Save_termina_BT" >Save</Button>
+                    </Grid>
+                    
                 </GroupBox>
             </Grid>
 

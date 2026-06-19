@@ -19,7 +19,8 @@ namespace BangSimulatorLib.Agent
 
         private int pythonAgentID;
 
-        public PythonAgent(int pythonAgentID = 0)
+   
+        public PythonAgent(Action<string> terminalPrint, bool openPythonWindow, int pythonAgentID = 0)
         {
             var configuration = new ConfigurationBuilder()
                 .SetBasePath(Directory.GetCurrentDirectory())
@@ -45,12 +46,37 @@ namespace BangSimulatorLib.Agent
                 StartInfo = new ProcessStartInfo
                 {
                     FileName = "python",
-                    Arguments = $"PythonScripts\\pyAgentProcess.py {pipeName}",
+                    Arguments = $"-u PythonScripts\\pyAgentProcess.py {pipeName}",
                     UseShellExecute = false,
-                    CreateNoWindow = !pythonDebug
+                    CreateNoWindow = !openPythonWindow,
+                    RedirectStandardOutput = !openPythonWindow,
+                    RedirectStandardError = !openPythonWindow
                 }
             };
+
+            pythonProcess.OutputDataReceived += (sender, e) =>
+            {
+                if (!string.IsNullOrEmpty(e.Data))
+                {
+                    terminalPrint(e.Data);
+                }
+            };
+            
+            pythonProcess.ErrorDataReceived += (sender, e) =>
+            {
+                if (!string.IsNullOrEmpty(e.Data))
+                {
+                    terminalPrint(e.Data);
+                }
+            };
+
             pythonProcess.Start();
+
+            if (!openPythonWindow)
+            {
+                pythonProcess.BeginOutputReadLine();
+                pythonProcess.BeginErrorReadLine();
+            }
 
             pipe.WaitForConnection();
 

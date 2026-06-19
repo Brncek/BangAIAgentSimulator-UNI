@@ -1,4 +1,5 @@
 ﻿using System.Diagnostics;
+using System.IO;
 using System.Reflection.Emit;
 using System.Security.Cryptography.X509Certificates;
 using System.Text;
@@ -16,6 +17,8 @@ using BangSimulatorGui.Graphs;
 using BangSimulatorGui.Model;
 using BangSimulatorLib.Game;
 using BangSimulatorLib.Statistics;
+using Microsoft.Win32;
+using ScottPlot;
 
 namespace BangSimulatorGui
 {
@@ -220,7 +223,12 @@ namespace BangSimulatorGui
         {
             profileIngMog = ProfileSimulatorCheck.IsChecked!.Value;
 
-            players = agentSettings.Select(m => m.GetSelectedPlayer(profileIngMog, stepping)).Where(s => s != null).ToList();
+            Action<string> terminalPrint = (s) =>
+            {
+                WriteLnToTerminal(s);
+            };
+
+            players = agentSettings.Select(m => m.GetSelectedPlayer(profileIngMog, stepping, terminalPrint)).Where(s => s != null).ToList();
 
             if (players.Count <= 2)
             {
@@ -452,7 +460,34 @@ namespace BangSimulatorGui
 
             //TODO: last deck memory
         }
+
+        private void Save_termina_BT(object sender, RoutedEventArgs e)
+        {
+
+            StringBuilder stringBuilder = new StringBuilder();
+
+            foreach (var line in terminal)
+            {
+                stringBuilder.AppendLine(line);
+            }
+
+
+            var dialog = new SaveFileDialog
+            {
+                Title = "Save Chart",
+                Filter = "LOG file (*.log)|*.log",
+                DefaultExt = ".log",
+                AddExtension = true,
+                FileName = "terminal.log"
+            };
+
+            if (dialog.ShowDialog() == true)
+            {
+                File.WriteAllText(dialog.FileName, stringBuilder.ToString());
+            }
+        }
     }
+}
 
     
-}
+

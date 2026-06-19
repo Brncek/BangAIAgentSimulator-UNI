@@ -32,6 +32,9 @@ namespace BangSimulatorGui.Model
         private StackPanel evalPanel = new();
         private CheckBox evalModCheckBox = new();
 
+        private StackPanel terminalPanel = new();
+        private CheckBox terminalCheckBox = new();
+
         private bool agentTypeAdded = false;
 
         public AgentMenuItem(string name)
@@ -57,7 +60,7 @@ namespace BangSimulatorGui.Model
 
             StackPanel[] panels =
             {
-                stepWaitPanel, pythonIdPanel, savePathPanel, loadPathPanel, evalPanel
+                stepWaitPanel, pythonIdPanel, savePathPanel, loadPathPanel, evalPanel, terminalPanel
             };
 
             foreach(var panel in panels)
@@ -205,6 +208,20 @@ namespace BangSimulatorGui.Model
             evalPanel.Visibility = Visibility.Collapsed;
             this.Children.Add(evalPanel);
 
+            //----------------------------------------------------------------
+
+            var terminalLabel = new TextBlock();
+            terminalLabel.Text = "Py terminal";
+            terminalLabel.Width = 75;
+
+            terminalPanel.Children.Add(terminalLabel);
+            terminalPanel.Children.Add(terminalCheckBox);
+
+            terminalPanel.Visibility = Visibility.Collapsed;
+            this.Children.Add(terminalPanel);
+
+            //---------------------------------------------------------------
+
             this.Children.Add(stepWaitPanel);
         }
 
@@ -223,7 +240,7 @@ namespace BangSimulatorGui.Model
             return $"({role.ToString()}/{agentType.ToString()})";
         }
 
-        public Player? GetSelectedPlayer(bool profileAgent, bool stepping)
+        public Player? GetSelectedPlayer(bool profileAgent, bool stepping, Action<string> terminalPrint)
         {
             if (comboboxRole.SelectedIndex == 4) return null;
 
@@ -241,7 +258,7 @@ namespace BangSimulatorGui.Model
                 case AgentType.Scripted: 
                     agent = new ScriptedAgent(); break;
                 case AgentType.Python:
-                    agent = new PythonAgent(id); break;
+                    agent = new PythonAgent(terminalPrint, terminalCheckBox.IsChecked!.Value, id); break;
                 case AgentType.NetDQN:
                     agent = new DQNAgentNet(); break;
                 default: agent = new RandomAgent(); break;
@@ -282,6 +299,7 @@ namespace BangSimulatorGui.Model
                 pythonIdPanel.IsEnabled = false;
                 savePathPanel.IsEnabled = false;
                 loadPathPanel.IsEnabled = false;
+                terminalPanel.IsEnabled = false;
 
                 if (keepEval)
                 {
@@ -301,6 +319,7 @@ namespace BangSimulatorGui.Model
                 savePathPanel.IsEnabled = true;
                 loadPathPanel.IsEnabled = true;
                 evalPanel.IsEnabled = true;
+                terminalPanel.IsEnabled = true;
             }
         }
 
@@ -319,6 +338,7 @@ namespace BangSimulatorGui.Model
                 savePathPanel.Visibility = Visibility.Collapsed;
                 loadPathPanel.Visibility = Visibility.Collapsed;
                 evalPanel.Visibility = Visibility.Collapsed;
+                terminalPanel.Visibility = Visibility.Collapsed;
 
                 agentTypeAdded = false;
             }
@@ -340,10 +360,12 @@ namespace BangSimulatorGui.Model
             if (selected == AgentType.Python)
             {
                 pythonIdPanel.Visibility = Visibility.Visible;
+                terminalPanel.Visibility= Visibility.Visible;
             }
             else
             {
                 pythonIdPanel.Visibility = Visibility.Collapsed;
+                terminalPanel.Visibility = Visibility.Collapsed;
             }
 
             if (selected == AgentType.Python || selected == AgentType.NetDQN)
