@@ -88,4 +88,7 @@ while True:
     elif type == 6:
         agent.Load(request["path"])
 
+    elif type == 7:
+        break;
+
 

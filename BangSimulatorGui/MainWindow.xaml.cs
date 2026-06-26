@@ -40,6 +40,10 @@ namespace BangSimulatorGui
         private bool profileIngMog = false;
         private bool inWait = false;
 
+        private Mutex terminalMutex = new();
+
+        private List<ISavableGraph> savableGraphs = [];
+
         public MainWindow()
         {
             InitializeComponent();
@@ -201,12 +205,15 @@ namespace BangSimulatorGui
         private void WriteLnToTerminal(string text)
         {
 
+            terminalMutex.WaitOne();
+
             if (maxTerminalLines < terminal.Count)
             {
                 terminal.RemoveLast();
             }
 
             terminal.AddFirst($"> {text}");
+
 
             StringBuilder stringBuilder = new StringBuilder();
 
@@ -215,9 +222,14 @@ namespace BangSimulatorGui
                 stringBuilder.AppendLine(line);
             }
 
+            var guiText = stringBuilder.ToString();
+
+            terminalMutex.ReleaseMutex();
+
             App.Current.Dispatcher.Invoke(new Action(() =>
             {
-                TerminalBlock.Text = stringBuilder.ToString();
+
+                TerminalBlock.Text = guiText;
 
             }));
         }
@@ -374,6 +386,7 @@ namespace BangSimulatorGui
         private void StatisticInfo(List<GameResoult> resoults, int AVGlen)
         {
             StatisticsPanel.Children.Clear();
+            savableGraphs.Clear();
 
             StackPanel bangsCounts = new StackPanel()
             {
@@ -412,7 +425,11 @@ namespace BangSimulatorGui
                     }
                 }
 
-                PlayerShotingGaraph bangGraph = new PlayerShotingGaraph($"PLAYER{i + 1} {playerLabels[i]} BANGS", bangCounts.ToArray(), names.ToArray(), maxBangCount);
+                PlayerShotingGaraph bangGraph = new PlayerShotingGaraph($"PLAYER{i + 1} {playerLabels[i]} BANGS", bangCounts.ToArray(), 
+                    names.ToArray(), maxBangCount, $"PLAYER{i + 1} BANGS");
+
+                savableGraphs.Add(bangGraph);
+
                 bangsCounts.Children.Add(bangGraph);
             }
 
@@ -427,7 +444,8 @@ namespace BangSimulatorGui
 
             var turnsLengths = StatisticsEngine.AverageTurns(resoults, AVGlen); 
 
-            var turnsGraph = new LineGraph("Average turns count", turnsLengths);
+            var turnsGraph = new LineGraph("Average turns count", turnsLengths, "AVG turns");
+            savableGraphs.Add(turnsGraph);
 
             otherStats.Children.Add(turnsGraph);
 
@@ -440,7 +458,9 @@ namespace BangSimulatorGui
             }
 
             var lastLifesGraph = new MultiLineGraph("Last round life progress", StatisticsEngine.PlayersLifesProgress(last), 
-                lifeGraphLabels.ToArray());  
+                lifeGraphLabels.ToArray(), "Lifes");
+
+            savableGraphs.Add(lastLifesGraph);
 
             otherStats.Children.Add(lastLifesGraph);
 
@@ -451,7 +471,8 @@ namespace BangSimulatorGui
 
             var winRatesAvg = StatisticsEngine.WinRatesAVGs(resoults, AVGlen);
 
-            var winTareAVGGraph = new MultiLineGraph("Win rate AVG", winRatesAvg, roles);
+            var winTareAVGGraph = new MultiLineGraph("Win rate AVG", winRatesAvg, roles, "WinRateAvgs");
+            savableGraphs.Add(winTareAVGGraph);
 
             otherStats.Children.Add(winTareAVGGraph);
 
@@ -477,8 +498,9 @@ namespace BangSimulatorGui
                 {
                     float[] avgs = StatisticsEngine.RewardsAVG(rewards[i]!, AVGlen);
                     
-                    var rewardGraph = new LineGraph($"PLAYER{ i + 1 } {playerLabels[i]!} AVG REWARDS", avgs);
+                    var rewardGraph = new LineGraph($"PLAYER{ i + 1 } {playerLabels[i]!} AVG REWARDS", avgs, $"PLAYER{i + 1} AVG-R");
                     rewardStats.Children.Add(rewardGraph);
+                    savableGraphs.Add(rewardGraph);
                 }
             }
 
@@ -511,6 +533,24 @@ namespace BangSimulatorGui
             if (dialog.ShowDialog() == true)
             {
                 File.WriteAllText(dialog.FileName, stringBuilder.ToString());
+            }
+        }
+
+        private void Save_All_Graphs(object sender, RoutedEventArgs e)
+        {
+            if (savableGraphs.Count > 0) 
+            {
+
+                var dialog = new OpenFolderDialog();
+                dialog.Title = "Select the output folder";
+
+                if (dialog.ShowDialog()!.Value) 
+                {
+                    string folderPath = dialog.FolderName;
+
+                    savableGraphs.ForEach(s => { s.Save(folderPath); });
+                }
+
             }
         }
     }

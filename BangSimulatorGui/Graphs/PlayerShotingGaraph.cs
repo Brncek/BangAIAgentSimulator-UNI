@@ -1,4 +1,5 @@
-﻿using System.Windows;
+﻿using System.IO;
+using System.Windows;
 using System.Windows.Controls;
 using Microsoft.Win32;
 using ScottPlot;
@@ -6,16 +7,23 @@ using ScottPlot.WPF;
 
 namespace BangSimulatorGui.Graphs
 {
-    public class PlayerShotingGaraph : StackPanel
+    public class PlayerShotingGaraph : StackPanel, ISavableGraph
     {
-        public PlayerShotingGaraph(string name, int[] shoots, string[] columnNames, int maxCount)
+        private string saveName;
+        private Plot savePlot;
+
+        public PlayerShotingGaraph(string name, int[] shoots, string[] columnNames, int maxCount, string saveName)
         {
+            this.saveName = saveName;
+
             var plot = new WpfPlot()
             {
                 Height = 300,
                 Width = 600,
                 Margin = new Thickness(5)
             };
+
+            savePlot = plot.Plot;
 
             var bars = shoots.Select((value, index) => new Bar
             {
@@ -69,6 +77,13 @@ namespace BangSimulatorGui.Graphs
             };
 
             this.Children.Add(saveBtn);
+        }
+
+        public void Save(string paht)
+        {
+            var savePath = Path.Combine(paht, $"{saveName}.png");
+
+            savePlot.SavePng(savePath, 1200, 900);
         }
     }
 }

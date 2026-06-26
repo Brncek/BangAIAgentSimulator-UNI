@@ -1,4 +1,5 @@
-﻿using System.Windows;
+﻿using System.IO;
+using System.Windows;
 using System.Windows.Controls;
 using Microsoft.Win32;
 using ScottPlot;
@@ -6,16 +7,23 @@ using ScottPlot.WPF;
 
 namespace BangSimulatorGui.Graphs
 {
-    public class MultiLineGraph : StackPanel
+    public class MultiLineGraph : StackPanel, ISavableGraph
     {
-        public MultiLineGraph(string name, List<float[]> nums, string[] names, int Max = 0)
+        private string saveName;
+        private Plot savePlot;
+
+        public MultiLineGraph(string name, List<float[]> nums, string[] names, string saveName, int Max = 0)
         {
+            this.saveName = saveName;
+
             var plot = new WpfPlot()
             {
                 Height = 300,
                 Width = 600,
                 Margin = new Thickness(5)
             };
+
+            savePlot = plot.Plot;
 
             if (Max > 0)
             {
@@ -66,6 +74,13 @@ namespace BangSimulatorGui.Graphs
             };
 
             this.Children.Add(saveBtn);
+        }
+
+        public void Save(string paht)
+        {
+            var savePath = Path.Combine(paht, $"{saveName}.png");
+
+            savePlot.SavePng(savePath, 1200, 900);
         }
     }
 
