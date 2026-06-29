@@ -205,14 +205,24 @@ namespace BangSimulatorLib.Agent
 
         public void Dispose()
         {
+            try
+            {
+                if (!pythonProcess.HasExited)
+                {
+                    SendData(new PythonAgentRequest(pythonAgentID) { RequestType = PythonAgentRequestType.End });
+
+                    Thread.Sleep(150);
+                }
+            }
+            catch
+            {
+            }
+
             if (!pythonProcess.HasExited)
             {
-                SendData(new PythonAgentRequest(pythonAgentID) { RequestType = PythonAgentRequestType.End });
-
-                Thread.Sleep(150);
-
                 pythonProcess.Kill();
             }
+
             pythonProcess.Dispose();
 
             pipe.Close();

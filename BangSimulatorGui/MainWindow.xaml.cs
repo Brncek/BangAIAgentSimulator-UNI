@@ -553,6 +553,18 @@ namespace BangSimulatorGui
 
             }
         }
+
+        private void Clear_Terminal_BT(object sender, RoutedEventArgs e)
+        {
+            terminalMutex.WaitOne();
+
+            terminal.Clear();
+            terminal.AddFirst($">");
+
+            TerminalBlock.Text = terminal.First();
+
+            terminalMutex.ReleaseMutex();
+        }
     }
 }
 

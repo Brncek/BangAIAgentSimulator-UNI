@@ -137,6 +137,7 @@
                             <RowDefinition/>
                             <RowDefinition Height="25"/>
                             <RowDefinition Height="25"/>
+                            <RowDefinition Height="25"/>
                         </Grid.RowDefinitions>
 
                         <ScrollViewer Margin="2">
@@ -147,6 +148,7 @@
 
                         <Button Grid.Row="1" Click="Save_termina_BT"  Margin="2">Save</Button>
                         <Button Grid.Row="2" Click="Save_All_Graphs"  Margin="2">Save all graphs</Button>
+                        <Button Grid.Row="3" Click="Clear_Terminal_BT"  Margin="2">Clear terminal</Button>
                     </Grid>
                     
                 </GroupBox>
