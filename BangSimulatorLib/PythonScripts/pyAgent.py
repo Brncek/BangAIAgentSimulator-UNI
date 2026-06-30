@@ -67,6 +67,10 @@ class RolloutBuffer:
         self.pos = 0
 
     def add(self, obs, action, log_prob, value, reward, done, mask):
+
+        if (self.pos == BUFFER_SIZE):
+            self.pos = 0
+
         self.obs[self.pos]       = obs
         self.actions[self.pos]   = action
         self.log_probs[self.pos] = log_prob

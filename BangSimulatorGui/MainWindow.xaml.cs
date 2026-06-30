@@ -318,23 +318,38 @@ namespace BangSimulatorGui
                 var stopWatch = new Stopwatch();
 
 
-                stopWatch.Start();
-
-                for (int i = 0; i < roundsCount; i++)
+                try
                 {
-                    lastResults.Add(lastGame!.Play());
+                    stopWatch.Start();
 
-                    SetProgress(i + 1 + runnedBeforeCount, roundsCount + runnedBeforeCount);
-
-                    stopSimMutex.WaitOne();
-                    if (stopSim)
+                    for (int i = 0; i < roundsCount; i++)
                     {
-                        i = roundsCount;
-                    }
-                    stopSimMutex.ReleaseMutex();
-                }
+                        lastResults.Add(lastGame!.Play());
 
-                stopWatch.Stop();
+                        SetProgress(i + 1 + runnedBeforeCount, roundsCount + runnedBeforeCount);
+
+                        stopSimMutex.WaitOne();
+                        if (stopSim)
+                        {
+                            i = roundsCount;
+                        }
+                        stopSimMutex.ReleaseMutex();
+                    }
+
+                    stopWatch.Stop();
+                }
+                catch (Exception e)
+                {
+                    WriteLnToTerminal(e.Message);
+
+                    App.Current.Dispatcher.Invoke(new Action(() =>
+                    {
+                        DoneActions();
+                        WriteLnToTerminal("=-=-=-=-=-=-=-=-=-=-=-=-=");
+                    }));
+
+                    return;
+                }
 
                 long elapsedTicks = stopWatch.ElapsedTicks;
 
@@ -556,6 +571,12 @@ namespace BangSimulatorGui
 
         private void Clear_Terminal_BT(object sender, RoutedEventArgs e)
         {
+            if (MessageBox.Show("Are you shore ?", "WARNING", MessageBoxButton.YesNo, MessageBoxImage.Warning) != MessageBoxResult.Yes)
+            {
+                return;
+            }
+
+
             terminalMutex.WaitOne();
 
             terminal.Clear();

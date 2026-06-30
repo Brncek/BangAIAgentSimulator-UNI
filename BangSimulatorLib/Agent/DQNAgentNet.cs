@@ -125,7 +125,6 @@ namespace BangSimulatorLib.Agent
         private PlayerRole lastRole;
         public void Reset()
         {
-            rewards = [];
             eval = false;
             hasPending = false;
             prevState = null;
