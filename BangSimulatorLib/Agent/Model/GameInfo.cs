@@ -23,7 +23,7 @@ namespace BangSimulatorLib.Agent.Model
         public int EndTurnIndex => ActionSpaceSize - 1;
 
 
-        public (float[] State, float[] Mask) Encode(bool includeMemory = false)
+        public (float[] State, float[] Mask) Encode(bool includeMemory)
         {
             List<float> features = [];
 
@@ -47,7 +47,7 @@ namespace BangSimulatorLib.Agent.Model
 
             if (includeMemory)
             {
-                //NOTE: Encode DeckMemory
+                //TODO: Encode DeckMemory
             }
 
             return (features.ToArray(), BuildMask());

@@ -217,5 +217,9 @@ namespace BangSimulatorLib.Agent
         public void Load(string path)
         {
         }
+
+        public void SetUseMemory(bool use)
+        {
+        }
     }
 }

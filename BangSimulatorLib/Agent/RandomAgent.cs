@@ -38,6 +38,10 @@ namespace BangSimulatorLib.Agent
         {
         }
 
+        public void SetUseMemory(bool use)
+        {
+        }
+
         public AgentAction Step(GameInfo gameInfo)
         {
             var randomAction = gameInfo.AvanableActions[random.Next(gameInfo.AvanableActions.Count)];

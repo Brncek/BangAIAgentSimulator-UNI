@@ -29,9 +29,11 @@ namespace BangSimulatorLib.Agent
         private string savePath = string.Empty;
         private double lastRewardAVG = 0.0;
 
+        private bool useMemory = false;
+
         public AgentAction Step(GameInfo gameInfo)
         {
-            var (state, mask) = gameInfo.Encode();
+            var (state, mask) = gameInfo.Encode(useMemory);
             lastRole = gameInfo.PlayerRole;
 
             brain ??= new DqnBrain(stateSize: state.Length,
@@ -154,6 +156,11 @@ namespace BangSimulatorLib.Agent
         public List<float> GetRewards()
         {
             return rewards;
+        }
+
+        public void SetUseMemory(bool use)
+        {
+            useMemory = use;
         }
     }
 

@@ -22,5 +22,7 @@ namespace BangSimulatorLib.Agent
         public void SetAutoSavePath(string pathFolder);
 
         public void Load(string path);
+
+        public void SetUseMemory(bool use);
     }
 }

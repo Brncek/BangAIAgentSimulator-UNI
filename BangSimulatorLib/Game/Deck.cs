@@ -77,9 +77,12 @@ namespace BangSimulatorLib.Game
         
             if (playerIndex != -1)
             {
-                DeckMemory.AddFirst(new DeckMemory(card, playerIndex, targetId));
-                if (DeckMemory.Count > Deck.MemSize) 
-                    DeckMemory.RemoveLast();
+                if(Deck.MemSize > 0)
+                {
+                    DeckMemory.AddFirst(new DeckMemory(card, playerIndex, targetId));
+                    if (DeckMemory.Count > Deck.MemSize)
+                        DeckMemory.RemoveLast();
+                }
             }
         }
 
