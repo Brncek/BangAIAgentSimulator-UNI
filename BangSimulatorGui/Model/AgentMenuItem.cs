@@ -240,7 +240,7 @@ namespace BangSimulatorGui.Model
             return $"({role.ToString()}/{agentType.ToString()})";
         }
 
-        public Player? GetSelectedPlayer(bool profileAgent, bool stepping, Action<string> terminalPrint)
+        public Player? GetSelectedPlayer(bool profileAgent, bool stepping, bool useMemory, Action<string> terminalPrint)
         {
             if (comboboxRole.SelectedIndex == 4) return null;
 

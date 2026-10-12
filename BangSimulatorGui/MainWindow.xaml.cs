@@ -4,6 +4,7 @@ using System.Numerics;
 using System.Reflection.Emit;
 using System.Security.Cryptography.X509Certificates;
 using System.Text;
+using System.Text.Json;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Data;
@@ -243,7 +244,20 @@ namespace BangSimulatorGui
                 WriteLnToTerminal(s);
             };
 
-            players = agentSettings.Select(m => m.GetSelectedPlayer(profileIngMog, stepping, terminalPrint)).Where(s => s != null).ToList();
+            if (!int.TryParse(MemSizeBox.Text, out var memSize))
+            {
+                MessageBox.Show("Memory size has to be number", "WARNING", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return false;
+            }
+
+            if (memSize <= 0)
+            {
+                memSize = 0;
+            }
+
+            bool useMemory = memSize > 0;
+
+            players = agentSettings.Select(m => m.GetSelectedPlayer(profileIngMog, useMemory ,stepping, terminalPrint)).Where(s => s != null).ToList();
 
             if (players.Count <= 2)
             {
@@ -264,17 +278,7 @@ namespace BangSimulatorGui
             }
 
 
-            if (!int.TryParse(MemSizeBox.Text, out var memSize))
-            {
-                MessageBox.Show("Memory size has to be number", "WARNING", MessageBoxButton.OK, MessageBoxImage.Warning);
-                return false;
-            }
-
-            if (memSize <= 4)
-            {
-                MessageBox.Show("Memory size has to be bigger than 4", "WARNING", MessageBoxButton.OK, MessageBoxImage.Warning);
-                return false;
-            }
+            
 
             Deck.SetDeckMemory(memSize);
 
@@ -585,6 +589,37 @@ namespace BangSimulatorGui
             TerminalBlock.Text = terminal.First();
 
             terminalMutex.ReleaseMutex();
+        }
+
+        private void Expoert_data_BT(object sender, RoutedEventArgs e)
+        {
+            if (lastResults is not null && lastResults.Count() > 0)
+            {
+                var dialog = new SaveFileDialog
+                {
+                    Title = "Save Chart",
+                    Filter = "JSON file (*.json)|*.json",
+                    DefaultExt = ".json",
+                    AddExtension = true,
+                    FileName = "resoult.json"
+                };
+
+                if (dialog.ShowDialog() != true)
+                {
+                    return;
+                }
+
+                var serializableRes = lastResults.Select(r => new GameResoultSerializable(r)).ToList();
+
+                var last_json = JsonSerializer.Serialize(serializableRes, new JsonSerializerOptions
+                {
+                    WriteIndented = true
+                });
+
+
+                File.WriteAllText(dialog.FileName, last_json);
+                
+            }
         }
     }
 }

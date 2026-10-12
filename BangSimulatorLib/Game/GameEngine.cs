@@ -102,7 +102,7 @@ namespace BangSimulatorLib.Game
         public GameResoult Play()
         {
 
-            //NOTE: schufle roles and indexes
+            // schufle roles and indexes
             List<Player> alivePlayers = Players.ToList();
             alivePlayers.ForEach(p => p.Reset());
             Deck.Reset();
