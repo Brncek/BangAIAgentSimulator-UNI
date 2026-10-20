@@ -286,6 +286,11 @@ namespace BangSimulatorGui.Model
                 agent = new StepAgent(agent);
             }
 
+            if (useMemory)
+            {
+                agent.SetUseMemory(useMemory);
+            }
+
             return new Player(role, agent);
         }
 

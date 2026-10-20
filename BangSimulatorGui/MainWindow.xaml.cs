@@ -257,7 +257,7 @@ namespace BangSimulatorGui
 
             bool useMemory = memSize > 0;
 
-            players = agentSettings.Select(m => m.GetSelectedPlayer(profileIngMog, useMemory ,stepping, terminalPrint)).Where(s => s != null).ToList();
+            players = agentSettings.Select(m => m.GetSelectedPlayer(profileIngMog, stepping, useMemory, terminalPrint)).Where(s => s != null).ToList();
 
             if (players.Count <= 2)
             {
