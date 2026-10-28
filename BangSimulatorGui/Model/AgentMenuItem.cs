@@ -145,6 +145,8 @@ namespace BangSimulatorGui.Model
 
             ollamaUrl.Width = 120;
 
+            ollamaUrl.Text = "http://localhost:11434";
+
             ollamaUrlPanel.Children.Add(ollamaPath);
             ollamaUrlPanel.Children.Add(ollamaUrl);
 

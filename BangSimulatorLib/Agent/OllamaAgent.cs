@@ -37,8 +37,8 @@ namespace BangSimulatorLib.Agent
 
         //------------------------------------------------------------------------------------------
 
-        public List<float> GetRewards() { return []}
-        public bool HasReward() { return false}
+        public List<float> GetRewards() { return []; }
+        public bool HasReward() { return false; }
         public void Load(string path) { }
         public void SetAutoSavePath(string pathFolder) { }
         public void SetEval(bool eval) { }
