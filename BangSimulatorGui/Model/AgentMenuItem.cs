@@ -23,6 +23,13 @@ namespace BangSimulatorGui.Model
         private StackPanel pythonIdPanel = new();
         private TextBox pythonIdBox = new();
 
+
+        private StackPanel ollamaUrlPanel = new();
+        private TextBox ollamaUrl = new();
+
+        private StackPanel ollamaModelPanel = new();
+        private TextBox ollamaModel = new();
+
         private StackPanel savePathPanel = new();
         private TextBox savePathBox = new();
 
@@ -60,7 +67,7 @@ namespace BangSimulatorGui.Model
 
             StackPanel[] panels =
             {
-                stepWaitPanel, pythonIdPanel, savePathPanel, loadPathPanel, evalPanel, terminalPanel
+                stepWaitPanel, pythonIdPanel, savePathPanel, loadPathPanel, evalPanel, terminalPanel, ollamaModelPanel, ollamaUrlPanel
             };
 
             foreach(var panel in panels)
@@ -129,6 +136,34 @@ namespace BangSimulatorGui.Model
 
             pythonIdPanel.Visibility = Visibility.Collapsed;
             this.Children.Add(pythonIdPanel);
+
+            //----------------------------------------------------------------
+
+            var ollamaPath = new TextBlock();
+            ollamaPath.Text = "Ollama url";
+            ollamaPath.Width = 75;
+
+            ollamaUrl.Width = 120;
+
+            ollamaUrlPanel.Children.Add(ollamaPath);
+            ollamaUrlPanel.Children.Add(ollamaUrl);
+
+            ollamaUrlPanel.Visibility = Visibility.Collapsed;
+            this.Children.Add(ollamaUrlPanel);
+
+            //----------------------------------------------------------------
+
+            var ollamaModelLabel = new TextBlock();
+            ollamaModelLabel.Text = "Model";
+            ollamaModelLabel.Width = 75;
+
+            ollamaModel.Width = 120;
+
+            ollamaModelPanel.Children.Add(ollamaModelLabel);
+            ollamaModelPanel.Children.Add(ollamaModel);
+
+            ollamaModelPanel.Visibility = Visibility.Collapsed;
+            this.Children.Add(ollamaModelPanel);
 
             //----------------------------------------------------------------
 
@@ -261,6 +296,8 @@ namespace BangSimulatorGui.Model
                     agent = new PythonAgent(terminalPrint, terminalCheckBox.IsChecked!.Value, id); break;
                 case AgentType.NetDQN:
                     agent = new DQNAgentNet(); break;
+                case AgentType.Ollama:
+                    agent = new OllamaAgent(ollamaUrl.Text, ollamaModel.Text); break; 
                 default: agent = new RandomAgent(); break;
             }
 
@@ -304,6 +341,8 @@ namespace BangSimulatorGui.Model
                 pythonIdPanel.IsEnabled = false;
                 loadPathPanel.IsEnabled = false;
                 terminalPanel.IsEnabled = false;
+                ollamaModelPanel.IsEnabled = false;
+                ollamaUrlPanel.IsEnabled = false;
 
                 if (continueMod)
                 {
@@ -326,6 +365,8 @@ namespace BangSimulatorGui.Model
                 loadPathPanel.IsEnabled = true;
                 evalPanel.IsEnabled = true;
                 terminalPanel.IsEnabled = true;
+                ollamaModelPanel.IsEnabled = true;
+                ollamaUrlPanel.IsEnabled = true;
             }
         }
 
@@ -390,6 +431,17 @@ namespace BangSimulatorGui.Model
                 savePathPanel.Visibility = Visibility.Collapsed;
                 loadPathPanel.Visibility = Visibility.Collapsed;
                 evalPanel.Visibility = Visibility.Collapsed;
+            }
+
+            if (selected == AgentType.Ollama)
+            {
+                ollamaModelPanel.Visibility = Visibility.Visible;
+                ollamaUrlPanel.Visibility = Visibility.Visible;
+            }
+            else
+            {
+                ollamaModelPanel.Visibility = Visibility.Collapsed;
+                ollamaUrlPanel.Visibility = Visibility.Collapsed;
             }
         }
     }
