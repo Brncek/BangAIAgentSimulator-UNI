@@ -257,7 +257,17 @@ namespace BangSimulatorGui
 
             bool useMemory = memSize > 0;
 
-            players = agentSettings.Select(m => m.GetSelectedPlayer(profileIngMog, stepping, useMemory, terminalPrint)).Where(s => s != null).ToList();
+
+            try
+            {
+                players = agentSettings.Select(m => m.GetSelectedPlayer(profileIngMog, stepping, useMemory, terminalPrint)).Where(s => s != null).ToList();
+            }
+            catch (Exception e)
+            {
+                WriteLnToTerminal(e.ToString());
+            }
+
+            
 
             if (players.Count <= 2)
             {
@@ -319,84 +329,101 @@ namespace BangSimulatorGui
 
             simThread = new Thread(() =>
             {
-                var stopWatch = new Stopwatch();
-
-
                 try
                 {
-                    stopWatch.Start();
 
-                    for (int i = 0; i < roundsCount; i++)
+                    var stopWatch = new Stopwatch();
+
+
+                    try
                     {
-                        lastResults.Add(lastGame!.Play());
+                        stopWatch.Start();
 
-                        SetProgress(i + 1 + runnedBeforeCount, roundsCount + runnedBeforeCount);
-
-                        stopSimMutex.WaitOne();
-                        if (stopSim)
+                        for (int i = 0; i < roundsCount; i++)
                         {
-                            i = roundsCount;
+                            lastResults.Add(lastGame!.Play());
+
+                            SetProgress(i + 1 + runnedBeforeCount, roundsCount + runnedBeforeCount);
+
+                            stopSimMutex.WaitOne();
+                            if (stopSim)
+                            {
+                                i = roundsCount;
+                            }
+                            stopSimMutex.ReleaseMutex();
                         }
-                        stopSimMutex.ReleaseMutex();
+
+                        stopWatch.Stop();
+                    }
+                    catch (Exception e)
+                    {
+                        WriteLnToTerminal(e.Message);
+
+                        App.Current.Dispatcher.Invoke(new Action(() =>
+                        {
+                            DoneActions();
+                            WriteLnToTerminal("=-=-=-=-=-=-=-=-=-=-=-=-=");
+                        }));
+
+                        return;
                     }
 
-                    stopWatch.Stop();
-                }
-                catch (Exception e)
-                {
-                    WriteLnToTerminal(e.Message);
+                    long elapsedTicks = stopWatch.ElapsedTicks;
+
+                    var winResoults = StatisticsEngine.WinsEval(lastResults);
+
+
+                    WriteLnToTerminal($"Sheriff wins: {winResoults.SherifWins:F2}%");
+                    WriteLnToTerminal($"Bandits wins: {winResoults.BanditWins:F2}%");
+                    WriteLnToTerminal($"Renegade wins: {winResoults.RenegadeWins:F2}%");
+
+                    var timespan = new TimeSpan(elapsedTicks);
+
+                    WriteLnToTerminal($"Time elapsed {timespan.ToString(@"hh\:mm\:ss")}");
+
+                    if (profileIngMog)
+                    {
+                        long tickSum = 0;
+
+                        foreach (var p in lastGame!.Players)
+                        {
+                            if (p.Agent is AgentProfiller profiler)
+                            {
+                                tickSum += profiler.GetProfiledTicks();
+                            }
+                        }
+
+                        var totalAgentTime = new TimeSpan(tickSum);
+
+                        WriteLnToTerminal($"Agent Time elapsed {totalAgentTime.ToString(@"hh\:mm\:ss")}");
+
+                        double agentPercentageOfWhole = tickSum / (double)elapsedTicks * 100;
+
+                        WriteLnToTerminal($"Agent % of the time {agentPercentageOfWhole:F3}");
+                    }
 
                     App.Current.Dispatcher.Invoke(new Action(() =>
                     {
+                        StatisticInfo(lastResults, avgLen);
                         DoneActions();
+
                         WriteLnToTerminal("=-=-=-=-=-=-=-=-=-=-=-=-=");
+
                     }));
-
-                    return;
                 }
-
-                long elapsedTicks = stopWatch.ElapsedTicks;
-
-                var winResoults = StatisticsEngine.WinsEval(lastResults);
-
-
-                WriteLnToTerminal($"Sheriff wins: {winResoults.SherifWins:F2}%");
-                WriteLnToTerminal($"Bandits wins: {winResoults.BanditWins:F2}%");
-                WriteLnToTerminal($"Renegade wins: {winResoults.RenegadeWins:F2}%");
-
-                var timespan = new TimeSpan(elapsedTicks);
-
-                WriteLnToTerminal($"Time elapsed {timespan.ToString(@"hh\:mm\:ss")}");
-
-                if (profileIngMog)
+                catch (Exception e)
                 {
-                    long tickSum = 0;
-
-                    foreach (var p in lastGame!.Players)
+                    App.Current.Dispatcher.Invoke(new Action(() =>
                     {
-                        if (p.Agent is AgentProfiller profiler)
-                        {
-                            tickSum += profiler.GetProfiledTicks();
-                        }
-                    }
+                        WriteLnToTerminal(e.ToString());
 
-                    var totalAgentTime = new TimeSpan(tickSum);
+                        WriteLnToTerminal("=-=-=-=-=-=-=-=-=-=-=-=-=");
 
-                    WriteLnToTerminal($"Agent Time elapsed {totalAgentTime.ToString(@"hh\:mm\:ss")}");
-
-                    double agentPercentageOfWhole = tickSum / (double)elapsedTicks * 100;
-
-                    WriteLnToTerminal($"Agent % of the time {agentPercentageOfWhole:F3}");
+                    }));
+                    
                 }
+                
 
-                App.Current.Dispatcher.Invoke(new Action(() =>
-                {
-                    StatisticInfo(lastResults, avgLen);
-                    DoneActions();
-
-                    WriteLnToTerminal("=-=-=-=-=-=-=-=-=-=-=-=-=");
-
-                }));
             });
 
             simThread.Start();
