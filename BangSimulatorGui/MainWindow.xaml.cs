@@ -44,6 +44,7 @@ namespace BangSimulatorGui
         private Mutex terminalMutex = new();
 
         private List<ISavableGraph> savableGraphs = [];
+        private RankingWindow? rankingWindow;
 
         public MainWindow()
         {
@@ -75,6 +76,22 @@ namespace BangSimulatorGui
 
                 PlayersSettings.Children.Add(separator);
             }
+        }
+
+        private void Ranking_Click(object sender, RoutedEventArgs e)
+        {
+            if (rankingWindow is not null)
+            {
+                if (rankingWindow.WindowState == WindowState.Minimized)
+                    rankingWindow.WindowState = WindowState.Normal;
+
+                rankingWindow.Activate();
+                return;
+            }
+
+            rankingWindow = new RankingWindow { Owner = this };
+            rankingWindow.Closed += (_, _) => rankingWindow = null;
+            rankingWindow.Show();
         }
 
         private void Step_Click(object sender, RoutedEventArgs e)

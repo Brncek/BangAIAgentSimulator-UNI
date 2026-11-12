@@ -20,8 +20,10 @@ namespace BangSimulatorLib.Agent
         private int pythonAgentID;
 
         private bool useMemory = false;
+        private bool disposed = true;
 
-        public PythonAgent(Action<string> terminalPrint, bool openPythonWindow, int pythonAgentID = 0)
+        public PythonAgent(Action<string> terminalPrint, bool openPythonWindow, int pythonAgentID = 0,
+            string pythonExecutable = "python")
         {
             var configuration = new ConfigurationBuilder()
                 .SetBasePath(Directory.GetCurrentDirectory())
@@ -39,14 +41,14 @@ namespace BangSimulatorLib.Agent
                 PipeDirection.InOut,
                 1,
                 PipeTransmissionMode.Byte,
-                PipeOptions.None);
+                PipeOptions.Asynchronous);
 
 
             pythonProcess = new Process
             {
                 StartInfo = new ProcessStartInfo
                 {
-                    FileName = "python",
+                    FileName = pythonExecutable,
                     Arguments = $"-u PythonScripts\\pyAgentProcess.py {pipeName}",
                     UseShellExecute = false,
                     CreateNoWindow = !openPythonWindow,
@@ -71,17 +73,40 @@ namespace BangSimulatorLib.Agent
                 }
             };
 
-            pythonProcess.Start();
-
-            if (!openPythonWindow)
+            try
             {
-                pythonProcess.BeginOutputReadLine();
-                pythonProcess.BeginErrorReadLine();
+                pythonProcess.Start();
+                if (!openPythonWindow)
+                {
+                    pythonProcess.BeginOutputReadLine();
+                    pythonProcess.BeginErrorReadLine();
+                }
+
+                using var timeout = new CancellationTokenSource(TimeSpan.FromSeconds(60));
+                Task connection = pipe.WaitForConnectionAsync(timeout.Token);
+                Task exited = pythonProcess.WaitForExitAsync(timeout.Token);
+                if (Task.WhenAny(connection, exited).GetAwaiter().GetResult() == exited && !pipe.IsConnected)
+                    throw new InvalidOperationException("Python exited before connecting. Check the Python executable and its numpy, torch, and msgpack packages.");
+
+                connection.GetAwaiter().GetResult();
+                timeout.Cancel();
+                disposed = false;
             }
-
-            pipe.WaitForConnection();
-
-            Thread.Sleep(1000);
+            catch
+            {
+                pipe.Dispose();
+                try
+                {
+                    if (!pythonProcess.HasExited)
+                        pythonProcess.Kill();
+                }
+                catch (InvalidOperationException)
+                {
+                    // The process failed to start or already exited.
+                }
+                pythonProcess.Dispose();
+                throw;
+            }
         }
 
         public void GameOver(PlayerRole winingRole)
@@ -206,6 +231,10 @@ namespace BangSimulatorLib.Agent
 
         public void Dispose()
         {
+            if (disposed)
+                return;
+
+            disposed = true;
             try
             {
                 if (!pythonProcess.HasExited)
@@ -228,6 +257,7 @@ namespace BangSimulatorLib.Agent
 
             pipe.Close();
             pipe.Dispose();
+            GC.SuppressFinalize(this);
         }
 
         ~PythonAgent()
@@ -319,6 +349,22 @@ namespace BangSimulatorLib.Agent
                 , Path = path
             });
         }
+
+        public void LoadForEvaluation(string path, int playerCount)
+        {
+            var gameInfo = new GameInfo { GamePlayerLifes = new int[playerCount] };
+            var encoded = gameInfo.Encode(useMemory);
+            SendData(new PythonAgentRequest(pythonAgentID)
+            {
+                RequestType = PythonAgentRequestType.LoadForEvaluation,
+                Path = path,
+                EmbededState = encoded.State,
+                EmbededCardMask = encoded.Mask
+            });
+
+            if (ReceveData().Error is { } error)
+                throw new InvalidDataException($"Could not load {path}. {error}");
+        }
         public void SetUseMemory(bool use)
         {
             useMemory = use;
@@ -342,6 +388,9 @@ namespace BangSimulatorLib.Agent
 
         [Key(3)]
         public List<float> Rewards { get; set; } = [];
+
+        [Key(4)]
+        public string? Error { get; set; }
     }
 
     [MessagePackObject]
@@ -422,6 +471,7 @@ namespace BangSimulatorLib.Agent
         Eval,
         Save,
         Load,
-        End
+        End,
+        LoadForEvaluation
     }
 }

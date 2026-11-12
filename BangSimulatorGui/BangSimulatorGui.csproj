@@ -134,6 +134,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\BangSimulatorLib\BangSimulatorLib.csproj" />
+    <ProjectReference Include="..\BangSimulatorRanking\BangSimulatorRanking.csproj" />
   </ItemGroup>
 
 </Project>

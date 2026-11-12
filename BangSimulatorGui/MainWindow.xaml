@@ -94,6 +94,7 @@
                                 <Button Width="150" Margin="10,5,10,10" Click="Step_Click" Visibility="Collapsed" x:Name="Step_BT">Step</Button>
                                 <Button Width="150" Margin="10,5,10,10" Click="Continue_Click" Visibility="Collapsed" x:Name="Continue_BT">Continue</Button>
                             </StackPanel>
+                            <Button Width="150" Margin="10,5,10,10" HorizontalAlignment="Center" Click="Ranking_Click">Ranking…</Button>
 
                         </StackPanel>
                     </GroupBox>

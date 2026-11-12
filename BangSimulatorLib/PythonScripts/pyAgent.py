@@ -175,10 +175,12 @@ class pyAgent:
             else:
                 flat_action = int(dist.sample().item())
 
-            log_prob = dist.log_prob(torch.tensor([flat_action]))
+            if self._buffer is not None:
+                log_prob = dist.log_prob(torch.tensor([flat_action]))
 
-        self._pending = (obs, flat_action, float(log_prob.item()),
-                         float(value.item()), mask)
+        if self._buffer is not None:
+            self._pending = (obs, flat_action, float(log_prob.item()),
+                             float(value.item()), mask)
 
         # Return MaskedActionIndex (index 2) so C# calls GameInfo.DecodeAction()
         # Format expected by PythonAgentResponse: [Type, TargetId, MaskedActionIndex, Rewards]
@@ -243,6 +245,14 @@ class pyAgent:
                 print(f"[PPO] loaded model from {path}")
             except Exception as e:
                 print(f"[PPO] load failed: {e}")
+
+    def LoadForEvaluation(self, path: str, obs_dim: int, n_actions: int):
+        policy = ActorCritic(obs_dim, n_actions)
+        policy.load_state_dict(torch.load(path, weights_only=True, map_location="cpu"))
+        self._policy = policy.eval()
+        self._is_eval = True
+        self._pending = None
+        self._buffer = None
 
     # ── PPO update ────────────────────────────────────────────────────────────
 

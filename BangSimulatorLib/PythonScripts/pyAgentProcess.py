@@ -91,4 +91,12 @@ while True:
     elif type == 7:
         break;
 
+    elif type == 8:
+        try:
+            agent.LoadForEvaluation(request["path"], len(request["embededState"]),
+                                    len(request["embededCardMask"]))
+            sendData(pipe, [0, 0, 0, [], None])
+        except Exception as error:
+            sendData(pipe, [0, 0, 0, [], str(error)])
+
 
