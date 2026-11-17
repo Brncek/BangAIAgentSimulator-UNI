@@ -218,8 +218,5 @@ namespace BangSimulatorLib.Agent
         {
         }
 
-        public void SetUseMemory(bool use)
-        {
-        }
     }
 }

@@ -23,7 +23,7 @@ namespace BangSimulatorLib.Agent.Model
         public int EndTurnIndex => ActionSpaceSize - 1;
 
 
-        public (float[] State, float[] Mask) Encode(bool includeMemory)
+        public (float[] State, float[] Mask) Encode()
         {
             List<float> features = [];
 
@@ -45,27 +45,30 @@ namespace BangSimulatorLib.Agent.Model
 
             //---DECK MEMORY
 
-            if (includeMemory)
+            int memoryLimit = Math.Max(0, Deck.MemLimit);
+
+            if (memoryLimit > 0)
             {
+                int memorySize = Math.Clamp(Deck.MemSize, 0, memoryLimit);
 
-                int memorySize = Math.Max(0, Deck.MemSize);
                 int playerCount = GamePlayerLifes.Length;
-
                 int cardTypeCount = Enum.GetValues(typeof(CardBangType)).Length;
                 int cardValueCount = Enum.GetValues(typeof(CardValue)).Length;
                 int cardSuitCount = Enum.GetValues(typeof(CardSuit)).Length;
 
                 int eventSize = 1 + cardTypeCount + playerCount
-                                  + NumTargets + cardValueCount + cardSuitCount;
+                                + NumTargets + cardValueCount + cardSuitCount;
 
-                var recentMemory = (this.DeckMemory ?? Array.Empty<DeckMemory>())
+                var recentMemory = (DeckMemory ?? Array.Empty<DeckMemory>())
                     .Where(m => m != null && m.plaied != null)
                     .TakeLast(memorySize)
                     .ToArray();
 
-                int padding = memorySize - recentMemory.Length;
+                // Always reserve MemLimit slots in the state.
+                // Events are right-aligned; unused slots remain all zero.
+                int padding = memoryLimit - recentMemory.Length;
 
-                for (int slot = 0; slot < memorySize; slot++)
+                for (int slot = 0; slot < memoryLimit; slot++)
                 {
                     if (slot < padding)
                     {
@@ -75,12 +78,10 @@ namespace BangSimulatorLib.Agent.Model
 
                     var item = recentMemory[slot - padding];
 
-                    features.Add(1f); 
+                    features.Add(1f); // This memory slot contains an event.
                     features.AddRange(OneHot((int)item.plaied.Type, 0, cardTypeCount - 1));
                     features.AddRange(OneHot(item.pId, 0, playerCount - 1));
-
                     features.AddRange(OneHot(item.targetId, -2, playerCount - 1));
-
                     features.AddRange(OneHot((int)item.plaied.Value, 0, cardValueCount - 1));
                     features.AddRange(OneHot((int)item.plaied.Suit, 0, cardSuitCount - 1));
                 }

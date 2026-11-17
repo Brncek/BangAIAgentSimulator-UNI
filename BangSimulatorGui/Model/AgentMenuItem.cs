@@ -277,7 +277,47 @@ namespace BangSimulatorGui.Model
             return $"({role.ToString()}/{agentType.ToString()})";
         }
 
-        public Player? GetSelectedPlayer(bool profileAgent, bool stepping, bool useMemory, Action<string> terminalPrint)
+        public SimulatorSettingsPlayer GetSettings()
+        {
+            if (!int.TryParse(pythonIdBox.Text, out int id) || id < 0)
+            {
+                id = 0;
+            }
+
+            return new()
+            {
+                Role = (AgentRole)comboboxRole.SelectedItem,
+                Type = (AgentType)agentTypeBox.SelectedItem,
+                UseStep = stepWaitCheckBox.IsChecked!.Value,
+                PythonId = id,
+                SavePath = savePathBox.Text,
+                LoadPath = loadPathBox.Text,
+                EvalMode = evalModCheckBox.IsChecked!.Value,
+                PyTerminal = terminalCheckBox.IsChecked!.Value,
+                OllamaUrl = ollamaUrl.Text,
+                Model = ollamaModel.Text
+            };
+        }
+
+        public void LoadSettings(SimulatorSettingsPlayer settings)
+        {
+            comboboxRole.SelectedItem = settings.Role;
+            agentTypeBox.SelectedItem = settings.Type;
+            stepWaitCheckBox.IsChecked = settings.UseStep;
+            pythonIdBox.Text = $"{settings.PythonId}";
+            savePathBox.Text = settings.SavePath;
+            loadPathBox.Text = settings.LoadPath;
+            evalModCheckBox.IsChecked = settings.EvalMode;
+            terminalCheckBox.IsChecked = settings.PyTerminal;
+            ollamaUrl.Text = settings.OllamaUrl;
+            ollamaModel.Text = settings.Model;
+
+            LostFocusOV();
+            AgentTypeLostFocus();
+        }
+
+
+        public Player? GetSelectedPlayer(bool profileAgent, bool stepping, Action<string> terminalPrint)
         {
             if (comboboxRole.SelectedIndex == 4) return null;
 
@@ -323,11 +363,6 @@ namespace BangSimulatorGui.Model
             if (stepWaitCheckBox.IsChecked!.Value && stepping)
             {
                 agent = new StepAgent(agent);
-            }
-
-            if (useMemory)
-            {
-                agent.SetUseMemory(useMemory);
             }
 
             return new Player(role, agent);

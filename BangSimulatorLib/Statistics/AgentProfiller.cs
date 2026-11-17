@@ -95,9 +95,5 @@ namespace BangSimulatorLib.Statistics
             agent.Load(path);
         }
 
-        public void SetUseMemory(bool use)
-        {
-            agent.SetUseMemory(use);
-        }
     }
 }
