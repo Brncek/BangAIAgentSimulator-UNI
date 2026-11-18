@@ -107,7 +107,17 @@ namespace BangSimulatorGui
             lastGame = new GameEngine(players.ToArray()!);
             lastResults = [];
 
-            RunGames(settings.Rounds, settings.Rounds);
+            var agentsSetInfo = GetPlayerSettings();
+
+            Action saveA = () =>
+            {
+                for(int i = 0; i < players.Count(); i++)
+                {
+                    players[i]!.Agent.SetAutoSavePath(agentsSetInfo[i].SavePath);
+                }
+            };
+
+            RunGames(settings.Rounds, settings.AvgLen, saveA);
         }
 
         private void Continue_Click(object sender, RoutedEventArgs e)
@@ -351,7 +361,7 @@ namespace BangSimulatorGui
             return agentSettings.Select(a => a.GetSettings()).ToList();
         }
 
-        private void RunGames(int roundsCount, int avgLen)
+        private void RunGames(int roundsCount, int avgLen, Action? SetSaveAgents = null)
         {
             stopSim = false;
 
@@ -381,6 +391,11 @@ namespace BangSimulatorGui
                                 i = roundsCount;
                             }
                             stopSimMutex.ReleaseMutex();
+
+                            if (i == 0)
+                            {
+                                SetSaveAgents?.Invoke();
+                            }
                         }
 
                         stopWatch.Stop();

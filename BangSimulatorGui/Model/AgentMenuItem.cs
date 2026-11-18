@@ -350,10 +350,12 @@ namespace BangSimulatorGui.Model
                 agent.Load(loadPathBox.Text);
             }
 
+            /*
             if (savePathBox.Text != string.Empty)
             {
                 agent.SetAutoSavePath(savePathBox.Text);
             }
+            */
 
             if (profileAgent)
             {

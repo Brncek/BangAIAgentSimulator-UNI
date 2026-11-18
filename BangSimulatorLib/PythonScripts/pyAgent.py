@@ -212,9 +212,10 @@ class pyAgent:
             if avg > self._last_reward_avg:
                 self._last_reward_avg = avg
                 try:
+                    print(f"[PPO] autosaved model to {self._save_path}")
                     torch.save(self._policy.state_dict(), self._save_path)
                 except Exception:
-                    pass
+                    print(f"[PPO] autosaved model Failed to {self._save_path}")
 
     def Reset(self):
         self._pending = None
@@ -226,6 +227,8 @@ class pyAgent:
         self._is_eval = isEval
 
     def Save(self, path: str):
+        if self._save_path == path:
+            return
         self._save_path = path
         if self._policy is not None:
             try:
