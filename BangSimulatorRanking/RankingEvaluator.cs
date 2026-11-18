@@ -14,55 +14,19 @@ internal sealed class RankingEvaluator(string python, IReadOnlyList<Checkpoint> 
     public void ValidatePool(OpponentPool pool)
     {
         var missingRoles = Roles.Distinct().Where(role => !checkpointsByRole.ContainsKey(role)).ToArray();
-        if (pool == OpponentPool.Self && missingRoles.Length > 0)
-            throw new InvalidOperationException($"Self-play requires a checkpoint for each role. Missing {string.Join(", ", missingRoles)}.");
-
-        if (pool == OpponentPool.Mixed && Roles.Count(checkpointsByRole.ContainsKey) < 3)
-            throw new InvalidOperationException("Mixed play requires checkpoints for at least two of each candidate's four opponent seats.");
+        if (missingRoles.Length > 0)
+            throw new InvalidOperationException($"{pool} play requires a checkpoint for each role. Missing {string.Join(", ", missingRoles)}.");
     }
 
-    public MatchResult Play(Checkpoint candidate, OpponentPool pool, int trialSeed)
+    public MatchResult Play(OpponentPool pool, int trialSeed)
     {
-        var schedule = new Random(trialSeed);
-        int focalSeat = Array.IndexOf(Roles, candidate.Role);
-        int[] opponentSeats = Enumerable.Range(0, Roles.Length).Where(seat => seat != focalSeat).ToArray();
-        schedule.Shuffle(opponentSeats);
-
-        var participants = new Participant?[Roles.Length];
-        participants[focalSeat] = new Participant(candidate.Role, OpponentKind.Checkpoint, candidate);
-        int trainedSeats = 0;
-        foreach (int seat in opponentSeats)
-        {
-            PlayerRole role = Roles[seat];
-            if (pool == OpponentPool.Self ||
-                (trainedSeats < 2 && checkpointsByRole.ContainsKey(role)))
-            {
-                Checkpoint[] choices = checkpointsByRole[role];
-                participants[seat] = new Participant(role, OpponentKind.Checkpoint, choices[schedule.Next(choices.Length)]);
-                trainedSeats++;
-            }
-        }
-
-        bool randomPlaced = false;
-        foreach (int seat in opponentSeats)
-        {
-            if (participants[seat] is not null)
-                continue;
-
-            participants[seat] = new Participant(Roles[seat],
-                randomPlaced ? OpponentKind.Scripted : OpponentKind.Random);
-            randomPlaced = true;
-        }
-
-        var order = Enumerable.Range(0, Roles.Length).ToArray();
-        schedule.Shuffle(order);
-        var lineup = order.Select(seat => participants[seat]!).ToArray();
+        var (lineup, gameSeed) = Schedule(pool, trialSeed);
         var usedInstances = new Dictionary<Checkpoint, int>();
         var budget = new MatchActionBudget();
         var players = lineup.Select(participant =>
             new Player(participant.Role, new BudgetedAgent(GetAgent(participant, usedInstances), budget))).ToArray();
 
-        GlobalRnd.SetSeed(schedule.Next());
+        GlobalRnd.SetSeed(gameSeed);
         PlayerRole? winner = null;
         try
         {
@@ -73,7 +37,37 @@ internal sealed class RankingEvaluator(string python, IReadOnlyList<Checkpoint> 
             // The engine has no turn limit. Count the capped match as a draw.
         }
 
-        return new MatchResult(candidate, lineup, Array.IndexOf(order, focalSeat), winner, trialSeed);
+        return new MatchResult(lineup, winner, trialSeed);
+    }
+
+    internal (Participant[] Lineup, int GameSeed) Schedule(OpponentPool pool, int trialSeed)
+    {
+        var schedule = new Random(trialSeed);
+        var participants = new Participant[Roles.Length];
+        // Only one in ten Mixed games gets a baseline, and only in one seat.
+        int baselineSeat = pool == OpponentPool.Mixed && schedule.Next(10) == 0 ? schedule.Next(Roles.Length) : -1;
+        var baselineKind = schedule.Next(2) == 0 ? OpponentKind.Random : OpponentKind.Scripted;
+        for (int seat = 0; seat < Roles.Length; seat++)
+        {
+            PlayerRole role = Roles[seat];
+            if (seat == baselineSeat)
+            {
+                participants[seat] = new Participant(role, baselineKind);
+                continue;
+            }
+
+            Checkpoint[] roleChoices = checkpointsByRole[role];
+            // Prefer different versions in the two Bandit seats. A single
+            // available Bandit can occupy both seats and is scored once.
+            Checkpoint[] choices = roleChoices.Length > 1
+                ? roleChoices.Where(choice => !participants.Take(seat).Any(player => player?.Checkpoint == choice)).ToArray()
+                : roleChoices;
+            participants[seat] = new Participant(role, OpponentKind.Checkpoint, choices[schedule.Next(choices.Length)]);
+        }
+
+        var order = Enumerable.Range(0, Roles.Length).ToArray();
+        schedule.Shuffle(order);
+        return (order.Select(seat => participants[seat]).ToArray(), schedule.Next());
     }
 
     private IAgent GetAgent(Participant participant, Dictionary<Checkpoint, int> usedInstances)
@@ -124,10 +118,8 @@ internal sealed record Checkpoint(string Path, PlayerRole Role)
 internal sealed record Participant(PlayerRole Role, OpponentKind Kind, Checkpoint? Checkpoint = null);
 
 internal sealed record MatchResult(
-    Checkpoint Candidate, IReadOnlyList<Participant> Lineup, int CandidateSeat, PlayerRole? WinningRole, int Seed)
+    IReadOnlyList<Participant> Lineup, PlayerRole? WinningRole, int Seed)
 {
-    public bool CandidateWon => WinningRole == TeamFor(Candidate.Role);
-
     public static PlayerRole TeamFor(PlayerRole role) =>
         role == PlayerRole.Deputy ? PlayerRole.Sheriff : role;
 }

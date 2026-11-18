@@ -1,6 +1,7 @@
 using System.Diagnostics;
 using System.Globalization;
 using System.IO;
+using System.Text;
 using System.Text.Json;
 using System.Windows;
 using System.Windows.Controls;
@@ -12,6 +13,7 @@ public partial class RankingWindow : Window
 {
     private Process? worker;
     private bool closed;
+    private bool cancelling;
 
     public RankingWindow()
     {
@@ -50,7 +52,8 @@ public partial class RankingWindow : Window
     {
         string folder = CheckpointFolder.Text.Trim();
         string python = PythonExecutable.Text.Trim();
-        bool uncertainty = Method.SelectedIndex == 0;
+        string method = (string)((ComboBoxItem)Method.SelectedItem).Tag;
+        bool uncertainty = method is "uncertainty" or "comparison";
         if (!Directory.Exists(folder) || python.Length == 0 ||
             !int.TryParse(GameLimit.Text, out int games) || games <= 0)
         {
@@ -78,12 +81,14 @@ public partial class RankingWindow : Window
             CreateNoWindow = true,
             RedirectStandardInput = true,
             RedirectStandardOutput = true,
-            RedirectStandardError = true
+            RedirectStandardError = true,
+            StandardOutputEncoding = Encoding.UTF8,
+            StandardErrorEncoding = Encoding.UTF8
         };
         foreach (string argument in new[]
         {
             Path.GetFullPath(folder), "--json",
-            "--method", (string)((ComboBoxItem)Method.SelectedItem).Tag,
+            "--method", method,
             "--pool", (string)((ComboBoxItem)Pool.SelectedItem).Tag,
             "--games", games.ToString(CultureInfo.InvariantCulture),
             "--batch", Math.Min(games, 50).ToString(CultureInfo.InvariantCulture),
@@ -91,11 +96,22 @@ public partial class RankingWindow : Window
             "--python", python
         })
             start.ArgumentList.Add(argument);
+        string role = (string)((ComboBoxItem)RankRole.SelectedItem).Tag;
+        if (uncertainty && role.Length > 0)
+        {
+            start.ArgumentList.Add("--role");
+            start.ArgumentList.Add(role);
+        }
 
         SettingsPanel.IsEnabled = false;
         RunButton.IsEnabled = false;
         CancelButton.IsEnabled = true;
         Leaderboard.ItemsSource = null;
+        EloColumn.Visibility = method is "elo" or "elo-overall" ? Visibility.Visible : Visibility.Collapsed;
+        ConfidenceColumn.Visibility = uncertainty ? Visibility.Visible : Visibility.Collapsed;
+        Comparisons.Text = "";
+        Comparisons.Visibility = Visibility.Collapsed;
+        cancelling = false;
         Status.Text = "Starting ranking…";
 
         try
@@ -104,7 +120,7 @@ public partial class RankingWindow : Window
             worker = process;
             try
             {
-                var stderr = process.StandardError.ReadToEndAsync();
+                var stderr = ReadDiagnosticsAsync(process);
                 RankingProgress? latest = null;
                 while (await process.StandardOutput.ReadLineAsync() is { } line)
                 {
@@ -113,22 +129,26 @@ public partial class RankingWindow : Window
                     if (!closed)
                     {
                         Leaderboard.ItemsSource = latest.Rows;
-                        Status.Text = Describe(latest);
+                        Comparisons.Text = string.Join(Environment.NewLine, latest.Comparisons ?? []);
+                        Comparisons.Visibility = string.IsNullOrEmpty(Comparisons.Text) ? Visibility.Collapsed : Visibility.Visible;
+                        if (!cancelling)
+                            Status.Text = Describe(latest);
                     }
                 }
 
                 await process.WaitForExitAsync();
-                string diagnostics = await stderr;
+                string? diagnostics = await stderr;
                 if (!closed)
                 {
                     string result = process.ExitCode switch
                     {
                         130 => "Cancelled.",
+                        0 when method == "comparison" && latest?.TargetReached == true => "Comparisons resolved.",
+                        0 when method == "comparison" => "Game limit reached. Some comparisons remain uncertain.",
                         0 when uncertainty && latest?.TargetReached == true => "Precision reached.",
                         0 when uncertainty => "Game limit reached before the precision target.",
                         0 => "Ranking complete.",
-                        _ => diagnostics.Split('\n', StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries)
-                            .LastOrDefault() ?? $"Ranking failed with exit code {process.ExitCode}."
+                        _ => diagnostics ?? $"Ranking failed with exit code {process.ExitCode}."
                     };
                     Status.Text = latest is null ? result : $"{Describe(latest)}  {result}";
                 }
@@ -158,6 +178,7 @@ public partial class RankingWindow : Window
             return;
 
         CancelButton.IsEnabled = false;
+        cancelling = true;
         Status.Text = "Cancelling after the current match…";
         try
         {
@@ -172,6 +193,22 @@ public partial class RankingWindow : Window
         {
             // The run may already have disposed the process.
         }
+    }
+
+    private async Task<string?> ReadDiagnosticsAsync(Process process)
+    {
+        string? lastMessage = null;
+        while (await process.StandardError.ReadLineAsync() is { } line)
+        {
+            if (string.IsNullOrWhiteSpace(line))
+                continue;
+
+            lastMessage = line;
+            if (!closed && !cancelling)
+                Status.Text = line;
+        }
+
+        return lastMessage;
     }
 
     protected override void OnClosed(EventArgs e)
@@ -197,13 +234,14 @@ public partial class RankingWindow : Window
     }
 
     private static string Describe(RankingProgress progress) =>
-        $"{progress.GamesPerCheckpoint:N0} games per checkpoint · {progress.Matches:N0} matches · " +
+        $"{progress.Matches:N0} matches · " +
         $"{progress.Draws:N0} draws · {TimeSpan.FromSeconds(progress.ElapsedSeconds):hh\\:mm\\:ss}";
 
     private sealed record RankingProgress(
-        int GamesPerCheckpoint, long Matches, long Draws, double ElapsedSeconds,
-        bool TargetReached, RankingRow[] Rows);
+        long Matches, long Draws, double ElapsedSeconds,
+        bool TargetReached, RankingRow[] Rows, string[]? Comparisons);
 
     private sealed record RankingRow(
-        string Role, int Rank, string Name, int Wins, int Games, int Draws, string Score, string Interval);
+        string Role, int Rank, string Name, int Wins, int Games, int Draws, string Score, string Interval,
+        string WinRate, string Elo);
 }

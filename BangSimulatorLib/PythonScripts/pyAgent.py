@@ -163,6 +163,17 @@ class pyAgent:
             if self._buffer.is_ready() and not self._is_eval:
                 self._update()
 
+        # Ranking only needs the greedy action. Skip the critic and probability
+        # distribution, which are used for training and reward tracking.
+        if self._is_eval and self._buffer is None:
+            with torch.inference_mode():
+                obs_t = torch.FloatTensor(obs).unsqueeze(0)
+                mask_t = torch.BoolTensor(mask).unsqueeze(0)
+                logits = self._policy.actor(self._policy.shared(obs_t))
+                logits = logits.masked_fill(~mask_t, -1e8)
+                flat_action = int(logits.argmax(dim=-1).item())
+            return [0, 0, flat_action, [0.0]]
+
         # Select action
         with torch.no_grad():
             obs_t  = torch.FloatTensor(obs).unsqueeze(0)

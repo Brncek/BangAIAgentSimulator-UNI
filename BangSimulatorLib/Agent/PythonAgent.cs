@@ -23,7 +23,7 @@ namespace BangSimulatorLib.Agent
         private bool disposed = true;
 
         public PythonAgent(Action<string> terminalPrint, bool openPythonWindow, int pythonAgentID = 0,
-            string pythonExecutable = "python")
+            string pythonExecutable = "python", bool asynchronousPipe = false)
         {
             var configuration = new ConfigurationBuilder()
                 .SetBasePath(Directory.GetCurrentDirectory())
@@ -41,7 +41,7 @@ namespace BangSimulatorLib.Agent
                 PipeDirection.InOut,
                 1,
                 PipeTransmissionMode.Byte,
-                PipeOptions.Asynchronous);
+                asynchronousPipe ? PipeOptions.Asynchronous : PipeOptions.None);
 
 
             pythonProcess = new Process
@@ -53,7 +53,8 @@ namespace BangSimulatorLib.Agent
                     UseShellExecute = false,
                     CreateNoWindow = !openPythonWindow,
                     RedirectStandardOutput = !openPythonWindow,
-                    RedirectStandardError = !openPythonWindow
+                    RedirectStandardError = !openPythonWindow,
+                    RedirectStandardInput = true
                 }
             };
 
@@ -76,6 +77,7 @@ namespace BangSimulatorLib.Agent
             try
             {
                 pythonProcess.Start();
+                pythonProcess.StandardInput.Close();
                 if (!openPythonWindow)
                 {
                     pythonProcess.BeginOutputReadLine();
@@ -83,7 +85,9 @@ namespace BangSimulatorLib.Agent
                 }
 
                 using var timeout = new CancellationTokenSource(TimeSpan.FromSeconds(60));
-                Task connection = pipe.WaitForConnectionAsync(timeout.Token);
+                Task connection = asynchronousPipe
+                    ? pipe.WaitForConnectionAsync(timeout.Token)
+                    : Task.Run(() => pipe.WaitForConnection());
                 Task exited = pythonProcess.WaitForExitAsync(timeout.Token);
                 if (Task.WhenAny(connection, exited).GetAwaiter().GetResult() == exited && !pipe.IsConnected)
                     throw new InvalidOperationException("Python exited before connecting. Check the Python executable and its numpy, torch, and msgpack packages.");

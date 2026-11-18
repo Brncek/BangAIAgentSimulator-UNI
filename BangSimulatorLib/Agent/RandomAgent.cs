@@ -8,7 +8,7 @@ namespace BangSimulatorLib.Agent
 {
     public class RandomAgent : IAgent
     {
-        private static Random random = GlobalRnd.Rnd;
+        private static Random random => GlobalRnd.Rnd;
 
         public void GameOver(PlayerRole winingRole)
         {
