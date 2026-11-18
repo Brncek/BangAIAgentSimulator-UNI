@@ -47,7 +47,43 @@ namespace BangSimulatorLib.Agent.Model
 
             if (includeMemory)
             {
-                //TODO: Encode DeckMemory
+
+                int memorySize = Math.Max(0, Deck.MemSize);
+                int playerCount = GamePlayerLifes.Length;
+
+                int cardTypeCount = Enum.GetValues(typeof(CardBangType)).Length;
+                int cardValueCount = Enum.GetValues(typeof(CardValue)).Length;
+                int cardSuitCount = Enum.GetValues(typeof(CardSuit)).Length;
+
+                int eventSize = 1 + cardTypeCount + playerCount
+                                  + NumTargets + cardValueCount + cardSuitCount;
+
+                var recentMemory = (this.DeckMemory ?? Array.Empty<DeckMemory>())
+                    .Where(m => m != null && m.plaied != null)
+                    .TakeLast(memorySize)
+                    .ToArray();
+
+                int padding = memorySize - recentMemory.Length;
+
+                for (int slot = 0; slot < memorySize; slot++)
+                {
+                    if (slot < padding)
+                    {
+                        features.AddRange(Enumerable.Repeat(0f, eventSize));
+                        continue;
+                    }
+
+                    var item = recentMemory[slot - padding];
+
+                    features.Add(1f); 
+                    features.AddRange(OneHot((int)item.plaied.Type, 0, cardTypeCount - 1));
+                    features.AddRange(OneHot(item.pId, 0, playerCount - 1));
+
+                    features.AddRange(OneHot(item.targetId, -2, playerCount - 1));
+
+                    features.AddRange(OneHot((int)item.plaied.Value, 0, cardValueCount - 1));
+                    features.AddRange(OneHot((int)item.plaied.Suit, 0, cardSuitCount - 1));
+                }
             }
 
             return (features.ToArray(), BuildMask());
