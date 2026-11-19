@@ -116,9 +116,15 @@ namespace BangSimulatorLib.Game
                 }
             });
 
-            int playerIndex = 0;
 
             var scherifID = alivePlayers.Find(p => p.Role == PlayerRole.Sheriff)!.Id;
+
+            int playerIndex = alivePlayers.FindIndex(p => p.Role == PlayerRole.Sheriff);
+
+            if (playerIndex == -1)
+            {
+                playerIndex = 0;
+            }
 
             int turn = 0;
             List<int[]> lives = [];
@@ -157,7 +163,7 @@ namespace BangSimulatorLib.Game
                         {
                             var beer = player.Hand.FirstOrDefault(c => c.Type == CardBangType.Beer);
 
-                            if (beer != null)
+                            if (beer != null && alivePlayers.Count > 2)
                             {
                                 player.Hand.Remove(beer);
                                 Deck.DiscardCard(beer, player.Id, -1);
@@ -180,7 +186,7 @@ namespace BangSimulatorLib.Game
                 }
 
                 //use beer if player is damaged
-                while (player.LifePoints < player.MaxLifePoints && player.Hand.Any(c => c.Type== CardBangType.Beer))
+                while (alivePlayers.Count > 2 && player.LifePoints < player.MaxLifePoints && player.Hand.Any(c => c.Type== CardBangType.Beer))
                 {
                     var beer = player.Hand.First(c => c.Type == CardBangType.Beer);
                     player.Hand.Remove(beer);
@@ -221,7 +227,7 @@ namespace BangSimulatorLib.Game
                         playedAction = player.Agent.Step(gameInfo);
 
                         result = PlayAction(playerIndex, playedAction, alivePlayers, ref bangNotUsed);
-                        
+
                         if ( result != null)
                             break;
                     }
@@ -284,12 +290,46 @@ namespace BangSimulatorLib.Game
                             }
                         }
                         break;
-                    case CardBangType.CatBalou or CardBangType.Duel or CardBangType.Dinamite or CardBangType.Jail:
+                    case CardBangType.Duel:
                         {
                             actions.Add(new Action
                             {
                                 PlayedCard = card,
-                                PotencialTargets = GetAllPlayersButMe(playerIndex, alivePlayers, true)
+                                PotencialTargets = alivePlayers.Select(p => p.Id).Where(id => id != alivePlayers[playerIndex].Id).ToArray()
+                            });
+                        }
+                        break;
+
+                    case CardBangType.CatBalou:
+                        {
+                            actions.Add(new Action
+                            {
+                                PlayedCard = card,
+                                PotencialTargets = alivePlayers
+                                                     .Where(p => p.Hand.Count > 0 || p.CardsInPlay.Count > 0)
+                                                     .Select(p => p.Id)
+                                                     .Where(id => id != alivePlayers[playerIndex].Id).ToArray()
+                            });
+                        }
+                        break;
+                    case CardBangType.Jail:
+                        {
+                            actions.Add(new Action
+                            {
+                                PlayedCard = card,
+                                PotencialTargets = alivePlayers
+                                                    .Where(p => p.Role != PlayerRole.Sheriff && !p.CardsInPlay.Any(c => c.Type == CardBangType.Jail) && p.Hand.Count > 0)
+                                                    .Select(p => p.Id)
+                                                    .Where(id => id != alivePlayers[playerIndex].Id).ToArray()
+                            });
+                        }
+                        break;
+                    case CardBangType.Dinamite :
+                        {
+                            actions.Add(new Action
+                            {
+                                PlayedCard = card,
+                                PotencialTargets =  [alivePlayers[playerIndex].Id]
                             });
                         }
                         break;
@@ -359,7 +399,7 @@ namespace BangSimulatorLib.Game
                 Deck.DiscardCard(action.PlayedCard, -1, -1);
                 return null;
             }
-            else
+            else if (action.PlayedCard.Color != CardBangColor.Blue)
             {
                 Deck.DiscardCard(action.PlayedCard, alivePlayers[playerIndex].Id, action.target);
             }
@@ -396,7 +436,6 @@ namespace BangSimulatorLib.Game
                 {
                     var target = GetPlayerById(action.target);
                     target.CardsInPlay.Add(action.PlayedCard);
-
                 }
 
                 return null;
@@ -456,9 +495,33 @@ namespace BangSimulatorLib.Game
                 case CardBangType.CatBalou:
                     {
                         var targetP = GetPlayerById(action.target);
-                        var randomCard = targetP.Hand[GlobalRnd.Rnd.Next(targetP.Hand.Count)];
 
-                        targetP.Hand.Remove(randomCard);
+                        Card? randomCard;
+
+                        if (targetP.CardsInPlay.Count() == 0)
+                        {
+                            randomCard = targetP.Hand[GlobalRnd.Rnd.Next(targetP.Hand.Count)];
+                            targetP.Hand.Remove(randomCard);
+                        }
+                        else if (targetP.Hand.Count() == 0)
+                        {
+                            randomCard = targetP.CardsInPlay[GlobalRnd.Rnd.Next(targetP.CardsInPlay.Count)];
+                            targetP.Hand.Remove(randomCard);
+                        }
+                        else
+                        {
+                            if (GlobalRnd.Rnd.Next(2) == 0)
+                            {
+                                randomCard = targetP.Hand[GlobalRnd.Rnd.Next(targetP.Hand.Count)];
+                                targetP.Hand.Remove(randomCard);
+                            }
+                            else
+                            {
+                                randomCard = targetP.CardsInPlay[GlobalRnd.Rnd.Next(targetP.CardsInPlay.Count)];
+                                targetP.Hand.Remove(randomCard);
+                            }
+                        }
+                        
                         Deck.DiscardCard(randomCard, -1, -1);
 
                     } break;
@@ -552,9 +615,14 @@ namespace BangSimulatorLib.Game
                     {
                         List<Player> toBeRemoved = [];
 
-                        alivePlayers.ForEach(p =>
+                        foreach (var p in alivePlayers)
                         {
-                            var missedCard = p.Hand.FirstOrDefault(c => c.Type == CardBangType.Missed);
+                            if (p.Id == playerIndex)
+                            {
+                                continue;
+                            }
+
+                                var missedCard = p.Hand.FirstOrDefault(c => c.Type == CardBangType.Missed);
 
                             if (missedCard != null)
                             {
@@ -578,11 +646,11 @@ namespace BangSimulatorLib.Game
                                         p.LifePoints = 0;
                                         toBeRemoved.Add(p);
                                         PlayerDied(p);
-                                        
+
                                     }
                                 }
                             }
-                        });
+                        }
 
                         for (int i = toBeRemoved.Count - 1; i >= 0; i--)
                         {
@@ -608,8 +676,13 @@ namespace BangSimulatorLib.Game
                     {
                         List<Player> toBeRemoved = [];
 
-                        alivePlayers.ForEach(p =>
+                        foreach (var p in alivePlayers)
                         {
+                            if (p.Id == playerIndex)
+                            {
+                                continue;
+                            }
+
                             var bangCard = p.Hand.FirstOrDefault(c => c.Type == CardBangType.Bang);
 
                             if (bangCard != null)
@@ -637,7 +710,7 @@ namespace BangSimulatorLib.Game
                                     }
                                 }
                             }
-                        });
+                        }
 
                         for (int i = toBeRemoved.Count - 1; i >= 0; i--)
                         {
@@ -750,6 +823,8 @@ namespace BangSimulatorLib.Game
         {
             player.Hand.ForEach(c => Deck.DiscardCard(c, -1, -1));
             player.CardsInPlay.ForEach(c => Deck.DiscardCard(c, -1, -1));
+            player.Hand.Clear();
+            player.CardsInPlay.Clear();
         }
 
         private GameResoult? CheckForWin(List<Player> alivePlayers)

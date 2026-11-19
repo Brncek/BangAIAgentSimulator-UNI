@@ -12,6 +12,10 @@ namespace BangSimulatorLib.Agent.Model
 
         public int PlayerHelth { get; set; } = 0;
 
+        public int CardFromId { get; set; } //TODO:
+
+        public Card? ReactingToCard { get; set; } //TODO:
+
         public List<Action> AvanableActions {  get; set; } = []; 
 
         public List<Card> CardsOut { get; set; } = [];

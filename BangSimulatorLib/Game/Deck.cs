@@ -62,6 +62,11 @@ namespace BangSimulatorLib.Game
 
         public Card DrawCard()
         {
+            if (deck.Count() == 0 && discardPile.Count() == 0)
+            {
+                return new Card(CardBangType.Barrel, CardValue.Queen, CardSuit.Spades);
+            }
+
             if (deck.Count == 0)
                 ShuffleFromDiscard();
             return deck.Pop();

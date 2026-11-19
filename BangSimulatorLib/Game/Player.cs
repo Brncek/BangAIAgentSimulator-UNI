@@ -109,6 +109,9 @@ namespace BangSimulatorLib.Game
             }
 
             LifePoints = MaxLifePoints;
+
+            Hand.Clear();
+            CardsInPlay.Clear();
             
             Agent.Reset();
         }

@@ -402,7 +402,7 @@ namespace BangSimulatorGui
                     }
                     catch (Exception e)
                     {
-                        WriteLnToTerminal(e.Message);
+                        WriteLnToTerminal(e.ToString());
 
                         App.Current.Dispatcher.Invoke(new Action(() =>
                         {
