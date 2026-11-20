@@ -334,6 +334,8 @@ namespace BangSimulatorGui.Model
             {
                 case AgentType.Scripted: 
                     agent = new ScriptedAgent(); break;
+                case AgentType.TurboScripted:
+                    agent = new TurboScriptedAgent(); break;
                 case AgentType.Python:
                     agent = new PythonAgent(terminalPrint, terminalCheckBox.IsChecked!.Value, id); break;
                 case AgentType.NetDQN:
