@@ -1,0 +1,13 @@
+> =-=-=-=-=-=-=-=-=-=-=-=-=
+> Renegade last AVG wins: 21,00%
+> Bandits last AVG wins: 45,00%
+> Sheriff last AVG wins: 34,00%
+> Time elapsed 00:00:16
+> Renegade wins: 18,00%
+> Bandits wins: 49,20%
+> Sheriff wins: 32,80%
+> [PPO] loaded model from E:\School\Projektt\agents\agents_turbo\Individual\deputy_i1.pth
+>   File "C:\Users\matej\source\repos\BangAIAgentSimulator-UNI\BangSimulatorGui\bin\Debug\net10.0-windows\PythonScripts\pyAgentProcess.py", line 52, in <module>
+> Traceback (most recent call last):
+> PYAGENT STARTED
+>

@@ -1,0 +1,15 @@
+>   File "C:\Users\matej\source\repos\BangAIAgentSimulator-UNI\BangSimulatorGui\bin\Debug\net10.0-windows\PythonScripts\pyAgentProcess.py", line 52, in <module>
+> Traceback (most recent call last):
+> =-=-=-=-=-=-=-=-=-=-=-=-=
+> Renegade last AVG wins: 16,00%
+> Bandits last AVG wins: 30,00%
+> Sheriff last AVG wins: 54,00%
+> Time elapsed 00:00:36
+> Renegade wins: 18,10%
+> Bandits wins: 28,75%
+> Sheriff wins: 53,15%
+> [PPO] loaded model from E:\School\Projektt\agents\agents_turbo\group\bandit_g1.pth
+> [PPO] loaded model from E:\School\Projektt\agents\agents_turbo\group\bandit_g2.pth
+> PYAGENT STARTED
+> PYAGENT STARTED
+>

@@ -1,0 +1,12 @@
+> Traceback (most recent call last):
+> =-=-=-=-=-=-=-=-=-=-=-=-=
+> Renegade last AVG wins: 17,00%
+> Bandits last AVG wins: 34,00%
+> Sheriff last AVG wins: 49,00%
+> Time elapsed 00:00:16
+> Renegade wins: 16,40%
+> Bandits wins: 36,90%
+> Sheriff wins: 46,70%
+> [PPO] loaded model from E:\School\Projektt\agents\agents_turbo\group\bandit_g2.pth
+> PYAGENT STARTED
+>

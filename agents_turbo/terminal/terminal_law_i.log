@@ -1,0 +1,25 @@
+> =-=-=-=-=-=-=-=-=-=-=-=-=
+> Renegade last AVG wins: 2,00%
+> Bandits last AVG wins: 8,00%
+> Sheriff last AVG wins: 90,00%
+> Time elapsed 00:01:48
+> Renegade wins: 4,30%
+> Bandits wins: 9,80%
+> Sheriff wins: 85,90%
+>                 ^^^^^^^^^^^^^^^^^^^
+>     size_data = read_exact(pipe, 4)
+>   File "C:\Users\matej\source\repos\BangAIAgentSimulator-UNI\BangSimulatorGui\bin\Debug\net10.0-windows\PythonScripts\pyAgentProcess.py", line 52, in <module>
+>   File "C:\Users\matej\source\repos\BangAIAgentSimulator-UNI\BangSimulatorGui\bin\Debug\net10.0-windows\PythonScripts\pyAgentProcess.py", line 52, in <module>
+> Traceback (most recent call last):
+> Traceback (most recent call last):
+> [PPO] loaded model from E:\School\Projektt\agents\agents_turbo\bandit_base1.pth
+> [PPO] loaded model from E:\School\Projektt\agents\agents_turbo\renegade_base1.pth
+> [PPO] loaded model from E:\School\Projektt\agents\agents_turbo\bandit_base2.pth
+> [PPO] loaded model from E:\School\Projektt\agents\agents_turbo\Individual\deputy_i1.pth
+> [PPO] loaded model from E:\School\Projektt\agents\agents_turbo\Individual\sheriff_i1.pth
+> PYAGENT STARTED
+> PYAGENT STARTED
+> PYAGENT STARTED
+> PYAGENT STARTED
+> PYAGENT STARTED
+>

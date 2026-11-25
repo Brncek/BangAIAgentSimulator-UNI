@@ -1,0 +1,38 @@
+> =-=-=-=-=-=-=-=-=-=-=-=-=
+> Renegade last AVG wins: 17,00%
+> Bandits last AVG wins: 24,00%
+> Sheriff last AVG wins: 59,00%
+> Time elapsed 00:01:54
+> Renegade wins: 11,50%
+> Bandits wins: 22,55%
+> Sheriff wins: 65,95%
+> Exception: Pipe closed
+>     raise Exception("Pipe closed")
+>   File "C:\Users\matej\source\repos\BangAIAgentSimulator-UNI\BangSimulatorGui\bin\Debug\net10.0-windows\PythonScripts\pyAgentProcess.py", line 29, in read_exact
+>                 ^^^^^^^^^^^^^^^^^^^
+> Exception: Pipe closed
+>     size_data = read_exact(pipe, 4)
+>     raise Exception("Pipe closed")
+>   File "C:\Users\matej\source\repos\BangAIAgentSimulator-UNI\BangSimulatorGui\bin\Debug\net10.0-windows\PythonScripts\pyAgentProcess.py", line 52, in <module>
+>   File "C:\Users\matej\source\repos\BangAIAgentSimulator-UNI\BangSimulatorGui\bin\Debug\net10.0-windows\PythonScripts\pyAgentProcess.py", line 29, in read_exact
+>                 ^^^^^^^^^^^^^^^^^^^
+>     size_data = read_exact(pipe, 4)
+> Traceback (most recent call last):
+>   File "C:\Users\matej\source\repos\BangAIAgentSimulator-UNI\BangSimulatorGui\bin\Debug\net10.0-windows\PythonScripts\pyAgentProcess.py", line 52, in <module>
+>                 ^^^^^^^^^^^^^^^^^^^
+>     size_data = read_exact(pipe, 4)
+>   File "C:\Users\matej\source\repos\BangAIAgentSimulator-UNI\BangSimulatorGui\bin\Debug\net10.0-windows\PythonScripts\pyAgentProcess.py", line 52, in <module>
+> Traceback (most recent call last):
+> Traceback (most recent call last):
+> Traceback (most recent call last):
+> [PPO] loaded model from E:\School\Projektt\agents\agents_turbo\bandit_base2.pth
+> [PPO] loaded model from E:\School\Projektt\agents\agents_turbo\bandit_base1.pth
+> [PPO] loaded model from E:\School\Projektt\agents\agents_turbo\group\renegade_g1.pth
+> [PPO] loaded model from E:\School\Projektt\agents\agents_turbo\deputy_base1.pth
+> [PPO] loaded model from E:\School\Projektt\agents\agents_turbo\sheriff_base1.pth
+> PYAGENT STARTED
+> PYAGENT STARTED
+> PYAGENT STARTED
+> PYAGENT STARTED
+> PYAGENT STARTED
+>

@@ -1,0 +1,47 @@
+> =-=-=-=-=-=-=-=-=-=-=-=-=
+> Renegade last AVG wins: 16,00%
+> Bandits last AVG wins: 18,00%
+> Sheriff last AVG wins: 66,00%
+> Time elapsed 00:02:01
+> Renegade wins: 15,75%
+> Bandits wins: 22,35%
+> Sheriff wins: 61,90%
+> [PPO] loaded model from E:\School\Projektt\agents\agents_turbo\bandit_base2.pth
+> [PPO] loaded model from E:\School\Projektt\agents\agents_turbo\bandit_base1.pth
+> Exception: Pipe closed
+> Exception: Pipe closed
+> Exception: Pipe closed
+> Exception: Pipe closed
+>     raise Exception("Pipe closed")
+>     raise Exception("Pipe closed")
+>     raise Exception("Pipe closed")
+>     raise Exception("Pipe closed")
+>   File "C:\Users\matej\source\repos\BangAIAgentSimulator-UNI\BangSimulatorGui\bin\Debug\net10.0-windows\PythonScripts\pyAgentProcess.py", line 29, in read_exact
+>   File "C:\Users\matej\source\repos\BangAIAgentSimulator-UNI\BangSimulatorGui\bin\Debug\net10.0-windows\PythonScripts\pyAgentProcess.py", line 29, in read_exact
+>   File "C:\Users\matej\source\repos\BangAIAgentSimulator-UNI\BangSimulatorGui\bin\Debug\net10.0-windows\PythonScripts\pyAgentProcess.py", line 29, in read_exact
+>   File "C:\Users\matej\source\repos\BangAIAgentSimulator-UNI\BangSimulatorGui\bin\Debug\net10.0-windows\PythonScripts\pyAgentProcess.py", line 29, in read_exact
+>                 ^^^^^^^^^^^^^^^^^^^
+>                 ^^^^^^^^^^^^^^^^^^^
+>                 ^^^^^^^^^^^^^^^^^^^
+>                 ^^^^^^^^^^^^^^^^^^^
+>     size_data = read_exact(pipe, 4)
+>     size_data = read_exact(pipe, 4)
+>     size_data = read_exact(pipe, 4)
+>     size_data = read_exact(pipe, 4)
+>   File "C:\Users\matej\source\repos\BangAIAgentSimulator-UNI\BangSimulatorGui\bin\Debug\net10.0-windows\PythonScripts\pyAgentProcess.py", line 52, in <module>
+>   File "C:\Users\matej\source\repos\BangAIAgentSimulator-UNI\BangSimulatorGui\bin\Debug\net10.0-windows\PythonScripts\pyAgentProcess.py", line 52, in <module>
+>   File "C:\Users\matej\source\repos\BangAIAgentSimulator-UNI\BangSimulatorGui\bin\Debug\net10.0-windows\PythonScripts\pyAgentProcess.py", line 52, in <module>
+>   File "C:\Users\matej\source\repos\BangAIAgentSimulator-UNI\BangSimulatorGui\bin\Debug\net10.0-windows\PythonScripts\pyAgentProcess.py", line 52, in <module>
+> Traceback (most recent call last):
+> Traceback (most recent call last):
+> Traceback (most recent call last):
+> Traceback (most recent call last):
+> [PPO] loaded model from E:\School\Projektt\agents\agents_turbo\Individual\renegade_i1.pth
+> [PPO] loaded model from E:\School\Projektt\agents\agents_turbo\deputy_base1.pth
+> [PPO] loaded model from E:\School\Projektt\agents\agents_turbo\sheriff_base1.pth
+> PYAGENT STARTED
+> PYAGENT STARTED
+> PYAGENT STARTED
+> PYAGENT STARTED
+> PYAGENT STARTED
+>

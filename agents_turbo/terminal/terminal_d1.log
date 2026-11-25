@@ -1,0 +1,36 @@
+> =-=-=-=-=-=-=-=-=-=-=-=-=
+> Renegade last AVG wins: 6,00%
+> Bandits last AVG wins: 15,00%
+> Sheriff last AVG wins: 79,00%
+> Time elapsed 00:01:48
+> Renegade wins: 8,10%
+> Bandits wins: 17,90%
+> Sheriff wins: 74,00%
+> Exception: Pipe closed
+> Exception: Pipe closed
+>     raise Exception("Pipe closed")
+>     raise Exception("Pipe closed")
+>   File "C:\Users\matej\source\repos\BangAIAgentSimulator-UNI\BangSimulatorGui\bin\Debug\net10.0-windows\PythonScripts\pyAgentProcess.py", line 29, in read_exact
+>   File "C:\Users\matej\source\repos\BangAIAgentSimulator-UNI\BangSimulatorGui\bin\Debug\net10.0-windows\PythonScripts\pyAgentProcess.py", line 29, in read_exact
+>                 ^^^^^^^^^^^^^^^^^^^
+>                 ^^^^^^^^^^^^^^^^^^^
+>     size_data = read_exact(pipe, 4)
+>     size_data = read_exact(pipe, 4)
+>   File "C:\Users\matej\source\repos\BangAIAgentSimulator-UNI\BangSimulatorGui\bin\Debug\net10.0-windows\PythonScripts\pyAgentProcess.py", line 52, in <module>
+>     size_data = read_exact(pipe, 4)
+>   File "C:\Users\matej\source\repos\BangAIAgentSimulator-UNI\BangSimulatorGui\bin\Debug\net10.0-windows\PythonScripts\pyAgentProcess.py", line 52, in <module>
+>   File "C:\Users\matej\source\repos\BangAIAgentSimulator-UNI\BangSimulatorGui\bin\Debug\net10.0-windows\PythonScripts\pyAgentProcess.py", line 52, in <module>
+> Traceback (most recent call last):
+> Traceback (most recent call last):
+> Traceback (most recent call last):
+> [PPO] loaded model from E:\School\Projektt\agents\agents_turbo\bandit_base2.pth
+> [PPO] loaded model from E:\School\Projektt\agents\agents_turbo\bandit_base1.pth
+> [PPO] loaded model from E:\School\Projektt\agents\agents_turbo\renegade_base1.pth
+> [PPO] loaded model from E:\School\Projektt\agents\agents_turbo\group\deputy_g1.pth
+> [PPO] loaded model from E:\School\Projektt\agents\agents_turbo\sheriff_base1.pth
+> PYAGENT STARTED
+> PYAGENT STARTED
+> PYAGENT STARTED
+> PYAGENT STARTED
+> PYAGENT STARTED
+>
