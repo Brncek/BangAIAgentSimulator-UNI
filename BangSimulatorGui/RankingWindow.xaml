@@ -1,7 +1,7 @@
 <Window x:Class="BangSimulatorGui.RankingWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        Title="Agent Ranking" Width="980" Height="660" MinWidth="720" MinHeight="440"
+        Title="Agent Ranking" Width="1100" Height="660" MinWidth="720" MinHeight="440"
         WindowStartupLocation="CenterOwner" ShowInTaskbar="False">
     <Grid Margin="16">
         <Grid.RowDefinitions>
@@ -126,6 +126,8 @@
 
                 </Grid>
             </Expander>
+            <TextBlock x:Name="SessionComparisonNote" Margin="0,8,0,0" TextWrapping="Wrap" Visibility="Collapsed"
+                       Text="Session Elo is a reference from the current session. Saved models, opponents, and training/evaluation modes may differ. Elo Δ = evaluation minus session." />
         </StackPanel>
 
         <DataGrid x:Name="Leaderboard" Grid.Row="1" AutoGenerateColumns="False" IsReadOnly="True"
@@ -138,6 +140,8 @@
                 <DataGridTextColumn Header="Games" Binding="{Binding Games}" Width="60" />
                 <DataGridTextColumn Header="Draws" Binding="{Binding Draws}" Width="60" />
                 <DataGridTextColumn x:Name="EloColumn" Header="Elo" Binding="{Binding Elo}" Width="64" Visibility="Collapsed" />
+                <DataGridTextColumn x:Name="SessionEloColumn" Header="Session Elo" Binding="{Binding SessionElo}" Width="82" Visibility="Collapsed" />
+                <DataGridTextColumn x:Name="EloDifferenceColumn" Header="Elo Δ" Binding="{Binding EloDifference}" Width="64" Visibility="Collapsed" />
                 <DataGridTextColumn Header="Win rate" Binding="{Binding WinRate}" Width="72" />
                 <DataGridTextColumn x:Name="ConfidenceColumn" Header="95% interval" Binding="{Binding Interval}" Width="132" />
             </DataGrid.Columns>

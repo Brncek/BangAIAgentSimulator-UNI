@@ -31,5 +31,4 @@ internal sealed class BudgetedAgent(IAgent agent, MatchActionBudget budget) : IA
     public List<float> GetRewards() => agent.GetRewards();
     public void SetAutoSavePath(string path) => agent.SetAutoSavePath(path);
     public void Load(string path) => agent.Load(path);
-    public void SetUseMemory(bool use) => agent.SetUseMemory(use);
 }

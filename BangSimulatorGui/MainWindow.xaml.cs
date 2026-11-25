@@ -45,6 +45,9 @@ namespace BangSimulatorGui
 
         private List<ISavableGraph> savableGraphs = [];
         private RankingWindow? rankingWindow;
+        private TrainingSessionElo? sessionElo;
+        private SessionEloRow[] sessionEloRows = [];
+        private DataGrid? sessionEloTable;
 
         private SimulatorSettings settings = new();
 
@@ -91,7 +94,7 @@ namespace BangSimulatorGui
                 return;
             }
 
-            rankingWindow = new RankingWindow { Owner = this };
+            rankingWindow = new RankingWindow(GetSessionEloRatings) { Owner = this };
             rankingWindow.Closed += (_, _) => rankingWindow = null;
             rankingWindow.Show();
         }
@@ -123,6 +126,11 @@ namespace BangSimulatorGui
 
             lastGame = new GameEngine(players.ToArray()!);
             lastResults = [];
+            sessionElo = new TrainingSessionElo(lastGame.Players,
+                GetPlayerSettings().Where(player => player.Role != AgentRole.NONE).ToArray());
+            sessionEloRows = sessionElo.Snapshot();
+            StatisticsPanel.Children.Clear();
+            AddSessionEloTable();
 
             var agentsSetInfo = GetPlayerSettings();
 
@@ -158,6 +166,7 @@ namespace BangSimulatorGui
 
             SetProgress(lastResults.Count, settings.Rounds + lastResults.Count);
 
+            sessionElo?.UpdateSettings(agentsSetInfo.Where(player => player.Role != AgentRole.NONE).ToArray());
             RunGames(settings.Rounds, settings.AvgLen);
         }
 
@@ -193,6 +202,7 @@ namespace BangSimulatorGui
         {
             lastResults = [];
             lastGame = null;
+            sessionElo = null;
 
             stopSim = false;
             inWait = false;
@@ -378,6 +388,55 @@ namespace BangSimulatorGui
             return agentSettings.Select(a => a.GetSettings()).ToList();
         }
 
+        private IReadOnlyDictionary<string, double> GetSessionEloRatings() =>
+            sessionEloRows.Where(row => row.Rated && !string.IsNullOrEmpty(row.ModelPath))
+                .GroupBy(row => row.ModelPath, StringComparer.OrdinalIgnoreCase)
+                .Where(group => group.Count() == 1)
+                .ToDictionary(group => group.Key, group => group.Single().Elo, StringComparer.OrdinalIgnoreCase);
+
+        private void AddSessionEloTable()
+        {
+            var panel = new StackPanel();
+            panel.Children.Add(new TextBlock
+            {
+                Text = "Starts at 1500. Baselines stay fixed. Continue keeps the session ratings.",
+                Margin = new Thickness(4)
+            });
+            sessionEloTable = new DataGrid
+            {
+                AutoGenerateColumns = false,
+                IsReadOnly = true,
+                CanUserAddRows = false,
+                CanUserSortColumns = false,
+                ItemsSource = sessionEloRows,
+                MinWidth = 700,
+                Margin = new Thickness(4)
+            };
+            foreach (string column in new[] { "Player", "Role", "Model", "Mode", "Games", "WinRate", "Elo" })
+            {
+                sessionEloTable.Columns.Add(new DataGridTextColumn
+                {
+                    Header = column == "WinRate" ? "Win rate" : column,
+                    Binding = new Binding(column) { StringFormat = column == "Elo" ? "F0" : null }
+                });
+            }
+            panel.Children.Add(sessionEloTable);
+            StatisticsPanel.Children.Add(new GroupBox { Header = "Session Elo", Content = panel });
+        }
+
+        private void RefreshSessionElo()
+        {
+            if (sessionElo is null)
+                return;
+            var rows = sessionElo.Snapshot();
+            App.Current.Dispatcher.Invoke(() =>
+            {
+                sessionEloRows = rows;
+                if (sessionEloTable is not null)
+                    sessionEloTable.ItemsSource = rows;
+            });
+        }
+
         private void RunGames(int roundsCount, int avgLen, Action? SetSaveAgents = null)
         {
             stopSim = false;
@@ -398,7 +457,11 @@ namespace BangSimulatorGui
 
                         for (int i = 0; i < roundsCount; i++)
                         {
-                            lastResults.Add(lastGame!.Play());
+                            var result = lastGame!.Play();
+                            lastResults.Add(result);
+                            sessionElo?.Observe(result.WinningRole);
+                            if (lastResults.Count % 100 == 0)
+                                RefreshSessionElo();
 
                             SetProgress(i + 1 + runnedBeforeCount, roundsCount + runnedBeforeCount);
 
@@ -419,6 +482,7 @@ namespace BangSimulatorGui
                     }
                     catch (Exception e)
                     {
+                        RefreshSessionElo();
                         WriteLnToTerminal(e.ToString());
 
                         App.Current.Dispatcher.Invoke(new Action(() =>
@@ -430,6 +494,9 @@ namespace BangSimulatorGui
                         return;
                     }
 
+                    RefreshSessionElo();
+                    foreach (var row in sessionEloRows)
+                        WriteLnToTerminal($"{row.Player} {row.Role}: session Elo {row.Elo:F0}, {row.Games} games, win rate {row.WinRate}");
                     long elapsedTicks = stopWatch.ElapsedTicks;
 
                     var winResoults = StatisticsEngine.WinsEval(lastResults);
@@ -495,6 +562,7 @@ namespace BangSimulatorGui
         {
             StatisticsPanel.Children.Clear();
             savableGraphs.Clear();
+            AddSessionEloTable();
 
             StackPanel bangsCounts = new StackPanel()
             {

@@ -18,8 +18,10 @@ namespace BangSimulatorLib.Agent
         private NamedPipeServerStream pipe;
 
         private int pythonAgentID;
+        private bool disposed = true;
 
-        public PythonAgent(Action<string> terminalPrint, bool openPythonWindow, int pythonAgentID = 0)
+        public PythonAgent(Action<string> terminalPrint, bool openPythonWindow, int pythonAgentID = 0,
+            string pythonExecutable = "python", bool asynchronousPipe = false)
         {
             var configuration = new ConfigurationBuilder()
                 .SetBasePath(Directory.GetCurrentDirectory())
@@ -353,7 +355,7 @@ namespace BangSimulatorLib.Agent
         public void LoadForEvaluation(string path, int playerCount)
         {
             var gameInfo = new GameInfo { GamePlayerLifes = new int[playerCount] };
-            var encoded = gameInfo.Encode(useMemory);
+            var encoded = gameInfo.Encode();
             SendData(new PythonAgentRequest(pythonAgentID)
             {
                 RequestType = PythonAgentRequestType.LoadForEvaluation,

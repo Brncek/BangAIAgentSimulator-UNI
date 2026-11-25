@@ -14,10 +14,13 @@ public partial class RankingWindow : Window
     private Process? worker;
     private bool closed;
     private bool cancelling;
+    private readonly Func<IReadOnlyDictionary<string, double>>? sessionEloProvider;
+    private IReadOnlyDictionary<string, double> sessionRatings = new Dictionary<string, double>();
 
-    public RankingWindow()
+    public RankingWindow(Func<IReadOnlyDictionary<string, double>>? sessionEloProvider = null)
     {
         InitializeComponent();
+        this.sessionEloProvider = sessionEloProvider;
         string python = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
             "Python", "pythoncore-3.15-64", "python.exe");
         if (File.Exists(python))
@@ -107,6 +110,11 @@ public partial class RankingWindow : Window
         RunButton.IsEnabled = false;
         CancelButton.IsEnabled = true;
         Leaderboard.ItemsSource = null;
+        sessionRatings = sessionEloProvider?.Invoke() ?? new Dictionary<string, double>();
+        bool compareSession = sessionRatings.Count > 0 && method is "elo" or "elo-overall";
+        SessionEloColumn.Visibility = compareSession ? Visibility.Visible : Visibility.Collapsed;
+        EloDifferenceColumn.Visibility = compareSession ? Visibility.Visible : Visibility.Collapsed;
+        SessionComparisonNote.Visibility = compareSession ? Visibility.Visible : Visibility.Collapsed;
         EloColumn.Visibility = method is "elo" or "elo-overall" ? Visibility.Visible : Visibility.Collapsed;
         ConfidenceColumn.Visibility = uncertainty ? Visibility.Visible : Visibility.Collapsed;
         Comparisons.Text = "";
@@ -128,7 +136,7 @@ public partial class RankingWindow : Window
                         ?? throw new InvalidDataException("The ranking worker returned an empty update.");
                     if (!closed)
                     {
-                        Leaderboard.ItemsSource = latest.Rows;
+                        Leaderboard.ItemsSource = latest.Rows.Select(row => WithSessionElo(row, folder)).ToArray();
                         Comparisons.Text = string.Join(Environment.NewLine, latest.Comparisons ?? []);
                         Comparisons.Visibility = string.IsNullOrEmpty(Comparisons.Text) ? Visibility.Collapsed : Visibility.Visible;
                         if (!cancelling)
@@ -211,6 +219,19 @@ public partial class RankingWindow : Window
         return lastMessage;
     }
 
+    private RankingRow WithSessionElo(RankingRow row, string folder)
+    {
+        string path = Path.GetFullPath(Path.Combine(folder, row.Name));
+        if (sessionRatings.TryGetValue(path, out double sessionRating) &&
+            double.TryParse(row.Elo, out double evaluatedRating))
+            return row with
+            {
+                SessionElo = sessionRating.ToString("F0"),
+                EloDifference = (evaluatedRating - sessionRating).ToString("+0;-0;0")
+            };
+        return row;
+    }
+
     protected override void OnClosed(EventArgs e)
     {
         closed = true;
@@ -243,5 +264,5 @@ public partial class RankingWindow : Window
 
     private sealed record RankingRow(
         string Role, int Rank, string Name, int Wins, int Games, int Draws, string Score, string Interval,
-        string WinRate, string Elo);
+        string WinRate, string Elo, string SessionElo = "", string EloDifference = "");
 }
