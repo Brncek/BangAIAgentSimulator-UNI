@@ -6,7 +6,7 @@
         xmlns:local="clr-namespace:BangSimulatorGui"
         xmlns:ScottPlot="clr-namespace:ScottPlot.WPF;assembly=ScottPlot.WPF"
         mc:Ignorable="d"
-        Title="BangSimulatorGui" Height="700" Width="1200">
+        Title="BangSimulatorGui" Height="800" Width="1200">
     <Grid>
         <Grid.RowDefinitions>
             <RowDefinition/>
@@ -61,10 +61,7 @@
                                 <TextBox Width="160" x:Name="RoundsCountBox">10000</TextBox>
                             </StackPanel>
 
-                            <StackPanel Orientation="Horizontal" Margin="5,2">
-                                <TextBlock Width="100">MemSize:</TextBlock>
-                                <TextBox Width="160" x:Name="MemSizeBox">-1</TextBox>
-                            </StackPanel>
+                            
 
                             <StackPanel Orientation="Horizontal" Margin="5,2">
                                 <TextBlock Width="100">Rnd seed:</TextBlock>
@@ -77,8 +74,18 @@
                             </StackPanel>
 
                             <StackPanel Orientation="Horizontal" Margin="5,2">
-                                <TextBlock Width="100">Profile simulator:</TextBlock>
-                                <CheckBox x:Name="ProfileSimulatorCheck"></CheckBox>
+                                <TextBlock Width="100" VerticalAlignment="Center">Profile simulator:</TextBlock>
+                                <CheckBox x:Name="ProfileSimulatorCheck" VerticalAlignment="Center"></CheckBox>
+
+                                <Button Margin="15,2,10,2" Padding="5,1" Click="Export_Click">Export</Button>
+                                <Button Margin="10,2" Padding="5,1" Click="Import_Click">Import</Button>
+                            </StackPanel>
+
+                            <StackPanel Orientation="Horizontal" Margin="5,2">
+                                <TextBlock Width="60">MemSize:</TextBlock>
+                                <TextBox Width="60" x:Name="MemSizeBox">-1</TextBox>
+                                <TextBlock Width="60" Margin="10,0">MemLimit:</TextBlock>
+                                <TextBox Width="60" x:Name="MemLimitBox">0</TextBox>
                             </StackPanel>
 
                             <Separator Margin="5"/>

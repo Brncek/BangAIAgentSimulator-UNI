@@ -40,10 +40,6 @@ namespace BangSimulatorLib.Agent
             throw new NotImplementedException();
         }
 
-        public void SetUseMemory(bool use)
-        {
-            throw new NotImplementedException();
-        }
 
         public AgentAction Step(GameInfo gameInfo)
         {

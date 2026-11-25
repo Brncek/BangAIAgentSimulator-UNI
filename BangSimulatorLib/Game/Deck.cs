@@ -11,6 +11,9 @@ namespace BangSimulatorLib.Game
         private List<Card> discardPile;
 
         public static int MemSize { get; private set; }
+
+        public static int MemLimit { get; private set; }
+
         public int[,] PlayerToPlayerBang { get; set; }
         public LinkedList<DeckMemory> DeckMemory { get; set; } = [];
         
@@ -24,9 +27,10 @@ namespace BangSimulatorLib.Game
             MemSize = configuration.GetValue<int>("MemSize");
         }
 
-        public static void SetDeckMemory(int size)
+        public static void SetDeckMemory(int size, int limit)
         {
             MemSize = size;
+            MemLimit = limit;
         }
 
         public Deck(int pCount)
@@ -58,6 +62,11 @@ namespace BangSimulatorLib.Game
 
         public Card DrawCard()
         {
+            if (deck.Count() == 0 && discardPile.Count() == 0)
+            {
+                return new Card(CardBangType.Barrel, CardValue.Queen, CardSuit.Spades);
+            }
+
             if (deck.Count == 0)
                 ShuffleFromDiscard();
             return deck.Pop();

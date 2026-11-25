@@ -14,6 +14,7 @@ namespace BangSimulatorLib.Game
     {
         public Player[] Players { get; set; } = [];
         public Deck Deck { get; set; }
+        private Player[] previousSeating = [];
 
         public GameEngine(Player[] players)
         {
@@ -98,12 +99,24 @@ namespace BangSimulatorLib.Game
 
             Deck = new Deck(agents.Length);
         }
-    
+
         public GameResoult Play()
         {
 
-            // schufle roles and indexes
+            // IDs index the roster and statistics. Only this game's table order changes.
             List<Player> alivePlayers = Players.ToList();
+            if (alivePlayers.Count > 1)
+            {
+                do
+                {
+                    for (int seat = alivePlayers.Count - 1; seat > 0; seat--)
+                    {
+                        int other = GlobalRnd.Rnd.Next(seat + 1);
+                        (alivePlayers[seat], alivePlayers[other]) = (alivePlayers[other], alivePlayers[seat]);
+                    }
+                } while (alivePlayers.SequenceEqual(previousSeating));
+            }
+            previousSeating = alivePlayers.ToArray();
             alivePlayers.ForEach(p => p.Reset());
             Deck.Reset();
 
@@ -116,9 +129,13 @@ namespace BangSimulatorLib.Game
                 }
             });
 
-            int playerIndex = 0;
 
-            var scherifID = alivePlayers.Find(p => p.Role == PlayerRole.Sheriff)!.Id;
+            int playerIndex = alivePlayers.FindIndex(p => p.Role == PlayerRole.Sheriff);
+
+            if (playerIndex == -1)
+            {
+                playerIndex = 0;
+            }
 
             int turn = 0;
             List<int[]> lives = [];
@@ -152,25 +169,8 @@ namespace BangSimulatorLib.Game
                     if (explode)
                     {
                         Deck.DiscardCard(dinamiteCard, -1, -1);
-                        player.LifePoints -= 3;
-                        if (player.LifePoints <= 0)
-                        {
-                            var beer = player.Hand.FirstOrDefault(c => c.Type == CardBangType.Beer);
-
-                            if (beer != null)
-                            {
-                                player.Hand.Remove(beer);
-                                Deck.DiscardCard(beer, player.Id, -1);
-                                player.LifePoints = 1;
-                            }
-                            else
-                            {
-                                player.LifePoints = 0;
-                                alivePlayers.RemoveAt(playerIndex);
-                                PlayerDied(player);
-                                skipTurn = true;
-                            }
-                        }
+                        ApplyDamage(player, 3, null, dinamiteCard, alivePlayers, alivePlayers.Count);
+                        skipTurn |= !alivePlayers.Contains(player);
                     }
                     else
                     {
@@ -178,16 +178,6 @@ namespace BangSimulatorLib.Game
                         alivePlayers[nextPlayerIndex].CardsInPlay.Add(dinamiteCard);
                     }
                 }
-
-                //use beer if player is damaged
-                while (player.LifePoints < player.MaxLifePoints && player.Hand.Any(c => c.Type== CardBangType.Beer))
-                {
-                    var beer = player.Hand.First(c => c.Type == CardBangType.Beer);
-                    player.Hand.Remove(beer);
-                    Deck.DiscardCard(beer, player.Id, -1);
-                    player.LifePoints += 1;
-                }
-
 
                 GameResoult? result = null;
 
@@ -208,21 +198,14 @@ namespace BangSimulatorLib.Game
                     {
                         playerIndex = alivePlayers.FindIndex(p => p.Id == player.Id);
 
-                        GameInfo gameInfo = new();
-                        gameInfo.PlayerHelth = player.LifePoints;
-                        gameInfo.PlayerRole = player.Role;
-                        gameInfo.GamePlayerLifes = Players.Select(p => p.LifePoints).ToArray();
-                        gameInfo.ScherifId = scherifID;
-                        gameInfo.DeckMemory = Deck.DeckMemory.ToArray();
-                        gameInfo.CardsOut = player.CardsInPlay;
-
-                        gameInfo.AvanableActions = BuildActions(playerIndex, alivePlayers, bangNotUsed);
+                        var gameInfo = CreateInfo(player, alivePlayers,
+                            BuildActions(playerIndex, alivePlayers, bangNotUsed));
 
                         playedAction = player.Agent.Step(gameInfo);
 
                         result = PlayAction(playerIndex, playedAction, alivePlayers, ref bangNotUsed);
-                        
-                        if ( result != null)
+
+                        if (result != null)
                             break;
                     }
                 }
@@ -232,9 +215,6 @@ namespace BangSimulatorLib.Game
                 }
 
 
-                playerIndex++;
-                playerIndex = playerIndex % alivePlayers.Count;
-            
                 if (result != null)
                 {
                     lives.Add(Players.Select(p => p.LifePoints).ToArray());
@@ -251,9 +231,10 @@ namespace BangSimulatorLib.Game
 
                     return result;
                 }
+                AdvanceToNextLivingPlayer(ref playerIndex, alivePlayers, player);
             }
         }
-        
+
         private List<Action> BuildActions(int playerIndex, List<Player> alivePlayers, bool bangNotUsed)
         {
 
@@ -284,12 +265,46 @@ namespace BangSimulatorLib.Game
                             }
                         }
                         break;
-                    case CardBangType.CatBalou or CardBangType.Duel or CardBangType.Dinamite or CardBangType.Jail:
+                    case CardBangType.Duel:
                         {
                             actions.Add(new Action
                             {
                                 PlayedCard = card,
-                                PotencialTargets = GetAllPlayersButMe(playerIndex, alivePlayers, true)
+                                PotencialTargets = alivePlayers.Select(p => p.Id).Where(id => id != alivePlayers[playerIndex].Id).ToArray()
+                            });
+                        }
+                        break;
+
+                    case CardBangType.CatBalou:
+                        {
+                            actions.Add(new Action
+                            {
+                                PlayedCard = card,
+                                PotencialTargets = alivePlayers
+                                                     .Where(p => p.Hand.Count > 0 || p.CardsInPlay.Count > 0)
+                                                     .Select(p => p.Id)
+                                                     .Where(id => id != alivePlayers[playerIndex].Id).ToArray()
+                            });
+                        }
+                        break;
+                    case CardBangType.Jail:
+                        {
+                            actions.Add(new Action
+                            {
+                                PlayedCard = card,
+                                PotencialTargets = alivePlayers
+                                                    .Where(p => p.Role != PlayerRole.Sheriff && !p.CardsInPlay.Any(c => c.Type == CardBangType.Jail) && p.Hand.Count > 0)
+                                                    .Select(p => p.Id)
+                                                    .Where(id => id != alivePlayers[playerIndex].Id).ToArray()
+                            });
+                        }
+                        break;
+                    case CardBangType.Dinamite:
+                        {
+                            actions.Add(new Action
+                            {
+                                PlayedCard = card,
+                                PotencialTargets = [alivePlayers[playerIndex].Id]
                             });
                         }
                         break;
@@ -301,6 +316,9 @@ namespace BangSimulatorLib.Game
                                 PotencialTargets = GetAllPlayersInRange(playerIndex, alivePlayers, 1, true)
                             });
                         }
+                        break;
+                    case CardBangType.Beer when alivePlayers.Count > 2 && player.LifePoints < player.MaxLifePoints:
+                        actions.Add(new Action { PlayedCard = card, PotencialTargets = [-1] });
                         break;
                     case CardBangType.Missed or CardBangType.Beer:
                         {
@@ -353,13 +371,13 @@ namespace BangSimulatorLib.Game
             }
 
             alivePlayers[playerIndex].Hand.Remove(action.PlayedCard);
-            
+
             if (action.target == -2)
             {
                 Deck.DiscardCard(action.PlayedCard, -1, -1);
                 return null;
             }
-            else
+            else if (action.PlayedCard.Color != CardBangColor.Blue)
             {
                 Deck.DiscardCard(action.PlayedCard, alivePlayers[playerIndex].Id, action.target);
             }
@@ -377,7 +395,7 @@ namespace BangSimulatorLib.Game
 
                     alivePlayers[playerIndex].CardsInPlay.Add(action.PlayedCard);
                 }
-                else if (action.PlayedCard.Type == CardBangType.Barrel 
+                else if (action.PlayedCard.Type == CardBangType.Barrel
                     || action.PlayedCard.Type == CardBangType.scope
                     || action.PlayedCard.Type == CardBangType.Mustang)
                 {
@@ -391,274 +409,81 @@ namespace BangSimulatorLib.Game
                     alivePlayers[playerIndex].CardsInPlay.Add(action.PlayedCard);
 
                 }
-                else if (action.PlayedCard.Type == CardBangType.Dinamite 
+                else if (action.PlayedCard.Type == CardBangType.Dinamite
                     || action.PlayedCard.Type == CardBangType.Jail)
                 {
-                    var target = GetPlayerById(action.target);
-                    target.CardsInPlay.Add(action.PlayedCard);
-
+                    GetPlayerById(action.target).CardsInPlay.Add(action.PlayedCard);
                 }
 
                 return null;
             }
 
+            var actor = alivePlayers[playerIndex];
+            var cause = action.PlayedCard;
             switch (action.PlayedCard.Type)
             {
+                case CardBangType.Beer:
+                    if (alivePlayers.Count > 2 && actor.LifePoints < actor.MaxLifePoints)
+                        actor.LifePoints++;
+                    break;
                 case CardBangType.Bang:
-                    {
-                        bangNotUsed = false;
-                        var targetP = GetPlayerById(action.target);
-                        if (targetP.HasBarrel())
-                        {
-                            var card = Deck.DrawCard();
-                            bool missed = card.Suit == CardSuit.Hearts;
-                            Deck.DiscardCard(card, -1, -1);
-                            if (missed)
-                            {
-                                return null;
-                            }
-                        }
+                    bangNotUsed = false;
+                    var target = GetPlayerById(action.target);
+                    if (!Defended(target, actor, cause, alivePlayers))
+                        ApplyDamage(target, 1, actor, cause, alivePlayers, alivePlayers.Count);
+                    return CheckForWin(alivePlayers);
 
-                        var missedCard = targetP.Hand.FirstOrDefault(c => c.Type == CardBangType.Missed);
-                        if (missedCard != null)
-                        {
-                            targetP.Hand.Remove(missedCard);
-                            Deck.DiscardCard(missedCard, action.target, -1);
-                            return null;
-                        }
-
-                        targetP.LifePoints -= 1;
-
-                        if (targetP.LifePoints <= 0)
-                        {
-                            var beer = targetP.Hand.FirstOrDefault(c => c.Type == CardBangType.Beer);
-                            if (beer != null)
-                            {
-                                targetP.Hand.Remove(beer);
-                                Deck.DiscardCard(beer, action.target, -1);
-                                targetP.LifePoints = 1;
-                            }
-                            else
-                            {
-                                targetP.LifePoints = 0;
-                                alivePlayers.Remove(targetP);
-                                PlayerDied(targetP);
-
-                                var result = CheckForWin(alivePlayers);
-                                if (result != null)
-                                {
-                                    return result;
-                                }
-                            }
-                        }
-
-                    } break; 
                 case CardBangType.CatBalou:
-                    {
-                        var targetP = GetPlayerById(action.target);
-                        var randomCard = targetP.Hand[GlobalRnd.Rnd.Next(targetP.Hand.Count)];
+                    var victim = GetPlayerById(action.target);
+                    int slot = GlobalRnd.Rnd.Next(victim.Hand.Count + victim.CardsInPlay.Count);
+                    var pile = slot < victim.Hand.Count ? victim.Hand : victim.CardsInPlay;
+                    if (pile == victim.CardsInPlay) slot -= victim.Hand.Count;
+                    Deck.DiscardCard(pile[slot], -1, -1);
+                    pile.RemoveAt(slot);
+                    break;
 
-                        targetP.Hand.Remove(randomCard);
-                        Deck.DiscardCard(randomCard, -1, -1);
-
-                    } break;
                 case CardBangType.Duel:
-                    {
-                        var targetP = GetPlayerById(action.target);
-                        var player = alivePlayers[playerIndex];
+                    var responder = GetPlayerById(action.target);
+                    var opponent = actor;
+                    while (Defended(responder, opponent, cause, alivePlayers))
+                        (responder, opponent) = (opponent, responder);
+                    ApplyDamage(responder, 1, opponent, cause, alivePlayers, alivePlayers.Count);
+                    return CheckForWin(alivePlayers);
 
-                        int playerBangCount = player.Hand.Count(c => c.Type == CardBangType.Bang);
-                        int targetBangCount = targetP.Hand.Count(c => c.Type == CardBangType.Bang);
-
-                        if (playerBangCount > targetBangCount)
-                        {
-
-                            for (int i = 0; i < targetBangCount + 1; i++)
-                            {
-                                var bangCard = targetP.Hand.FirstOrDefault(c => c.Type == CardBangType.Bang)!;
-                                var playerBangCard = player.Hand.FirstOrDefault(c => c.Type == CardBangType.Bang)!;
-                                
-                                targetP.Hand.Remove(bangCard);
-                                player.Hand.Remove(playerBangCard);
-                                Deck.DiscardCard(bangCard, action.target, -1);
-                                Deck.DiscardCard(playerBangCard, player.Id, -1);
-                            }
-
-
-                            targetP.LifePoints -= 1;
-                            if (targetP.LifePoints <= 0)
-                            {
-                                var beer = targetP.Hand.FirstOrDefault(c => c.Type == CardBangType.Beer);
-                                if (beer != null)
-                                {
-                                    targetP.Hand.Remove(beer);
-                                    Deck.DiscardCard(beer, targetP.Id, -1);
-                                    targetP.LifePoints = 1;
-                                }
-                                else
-                                {
-                                    targetP.LifePoints = 0;
-                                    alivePlayers.Remove(targetP);
-                                    PlayerDied(targetP);
-                                    var result = CheckForWin(alivePlayers);
-                                    if (result != null)
-                                    {
-                                        return result;
-                                    }
-                                }
-                            }
-                        }
-                        else 
-                        {
-                            for (int i = 0; i < playerBangCount + 1; i++)
-                            {
-                                var bangCard = targetP.Hand.FirstOrDefault(c => c.Type == CardBangType.Bang)!;
-                                var playerBangCard = player.Hand.FirstOrDefault(c => c.Type == CardBangType.Bang)!;
-
-                                targetP.Hand.Remove(bangCard);
-                                player.Hand.Remove(playerBangCard);
-                                Deck.DiscardCard(bangCard, action.target, -1);
-                                Deck.DiscardCard(playerBangCard, player.Id, -1);
-                            }
-
-                            player.LifePoints -= 1; 
-
-                            if (player.LifePoints <= 0)
-                            {
-                                var beer = player.Hand.FirstOrDefault(c => c.Type == CardBangType.Beer);
-                                if (beer != null)
-                                {
-                                    player.Hand.Remove(beer);
-                                    Deck.DiscardCard(beer, player.Id, -1);
-                                    player.LifePoints = 1;
-                                }
-                                else
-                                {
-                                    player.LifePoints = 0;
-                                    alivePlayers.Remove(player);
-                                    PlayerDied(player);
-                                    var result = CheckForWin(alivePlayers);
-                                    if (result != null)
-                                    {
-                                        return result;
-                                    }
-                                }
-                            }
-                        }
-
-
-                    } break; 
                 case CardBangType.Gatling:
-                    {
-                        List<Player> toBeRemoved = [];
-
-                        alivePlayers.ForEach(p =>
-                        {
-                            var missedCard = p.Hand.FirstOrDefault(c => c.Type == CardBangType.Missed);
-
-                            if (missedCard != null)
-                            {
-                                p.Hand.Remove(missedCard);
-                                Deck.DiscardCard(missedCard, p.Id, -1);
-                            }
-                            else
-                            {
-                                p.LifePoints -= 1;
-                                if (p.LifePoints <= 0)
-                                {
-                                    var beer = p.Hand.FirstOrDefault(c => c.Type == CardBangType.Beer);
-                                    if (beer != null)
-                                    {
-                                        p.Hand.Remove(beer);
-                                        Deck.DiscardCard(beer, p.Id, -1);
-                                        p.LifePoints = 1;
-                                    }
-                                    else
-                                    {
-                                        p.LifePoints = 0;
-                                        toBeRemoved.Add(p);
-                                        PlayerDied(p);
-                                        
-                                    }
-                                }
-                            }
-                        });
-
-                        for (int i = toBeRemoved.Count - 1; i >= 0; i--)
-                        {
-                            alivePlayers.Remove(toBeRemoved[i]);
-                            var result = CheckForWin(alivePlayers);
-                            if (result != null)
-                            {
-                                return result;
-                            }
-                        }
-
-                    } break; 
-                case CardBangType.GeneralStore:
-                    { 
-                        alivePlayers.ForEach(p =>
-                        {
-                            var card = Deck.DrawCard();
-                            p.Hand.Add(card);
-                        });
-
-                    } break; 
                 case CardBangType.Indians:
+                    // All targets of one card use the original participant count for Beer.
+                    var targets = alivePlayers.Skip(playerIndex + 1).Concat(alivePlayers.Take(playerIndex)).ToArray();
+                    int participants = alivePlayers.Count;
+                    foreach (var other in targets)
                     {
-                        List<Player> toBeRemoved = [];
+                        if (!Defended(other, actor, cause, alivePlayers))
+                            ApplyDamage(other, 1, actor, cause, alivePlayers, participants);
+                    }
+                    return CheckForWin(alivePlayers);
 
-                        alivePlayers.ForEach(p =>
-                        {
-                            var bangCard = p.Hand.FirstOrDefault(c => c.Type == CardBangType.Bang);
-
-                            if (bangCard != null)
-                            {
-                                p.Hand.Remove(bangCard);
-                                Deck.DiscardCard(bangCard, p.Id, -1);
-                            }
-                            else
-                            {
-                                p.LifePoints -= 1;
-                                if (p.LifePoints <= 0)
-                                {
-                                    var beer = p.Hand.FirstOrDefault(c => c.Type == CardBangType.Beer);
-                                    if (beer != null)
-                                    {
-                                        p.Hand.Remove(beer);
-                                        Deck.DiscardCard(beer, p.Id, -1);
-                                        p.LifePoints = 1;
-                                    }
-                                    else
-                                    {
-                                        p.LifePoints = 0;
-                                        toBeRemoved.Add(p);
-                                        PlayerDied(p);
-                                    }
-                                }
-                            }
-                        });
-
-                        for (int i = toBeRemoved.Count - 1; i >= 0; i--)
-                        {
-                            alivePlayers.Remove(toBeRemoved[i]);
-                            var result = CheckForWin(alivePlayers);
-                            if (result != null)
-                            {
-                                return result;
-                            }
-                        }
-
-                    } break; 
+                case CardBangType.GeneralStore:
+                    var market = alivePlayers.Select(_ => Deck.DrawCard()).ToList();
+                    foreach (var buyer in alivePlayers.Skip(playerIndex).Concat(alivePlayers.Take(playerIndex)))
+                    {
+                        var offers = market.Select(c => new Action { PlayedCard = c, PotencialTargets = [-1] }).ToList();
+                        var pick = buyer.Agent.Step(CreateInfo(buyer, alivePlayers, offers, cause, actor,
+                            DecisionKind.StorePick));
+                        if (pick?.PlayedCard == null || !market.Remove(pick.PlayedCard))
+                            throw new InvalidOperationException("General Store requires an offered card.");
+                        buyer.Hand.Add(pick.PlayedCard);
+                    }
+                    break;
                 case CardBangType.Panic:
                     {
                         var targetP = GetPlayerById(action.target);
                         var randomCard = targetP.Hand[GlobalRnd.Rnd.Next(targetP.Hand.Count)];
-                        
+
                         targetP.Hand.Remove(randomCard);
                         alivePlayers[playerIndex].Hand.Add(randomCard);
 
-                    } break;
+                    }
+                    break;
                 case CardBangType.Salon:
                     {
                         alivePlayers.ForEach(p =>
@@ -669,9 +494,10 @@ namespace BangSimulatorLib.Game
                             }
                         });
 
-                    } break;
+                    }
+                    break;
                 case CardBangType.Stagecoach:
-                    { 
+                    {
                         List<Card> cards = new List<Card>();
                         for (int i = 0; i < 2; i++)
                         {
@@ -680,7 +506,8 @@ namespace BangSimulatorLib.Game
 
                         alivePlayers[playerIndex].Hand.AddRange(cards);
 
-                    } break;
+                    }
+                    break;
                 case CardBangType.WellsFargo:
                     {
                         List<Card> cards = new List<Card>();
@@ -691,10 +518,92 @@ namespace BangSimulatorLib.Game
 
                         alivePlayers[playerIndex].Hand.AddRange(cards);
 
-                    } break;
+                    }
+                    break;
             }
 
             return null;
+        }
+
+        private GameInfo CreateInfo(Player player, List<Player> alive, List<Action> actions,
+            Card? cause = null, Player? source = null, DecisionKind decision = DecisionKind.Turn)
+        {
+            return new GameInfo
+            {
+                PlayerRole = player.Role,
+                PlayerHelth = player.LifePoints,
+                GamePlayerLifes = Players.Select(p => p.LifePoints).ToArray(),
+                DeadPlayerRoles = Players.Select(p => alive.Contains(p) ? (PlayerRole?)null : p.Role).ToArray(),
+                ScherifId = Players.First(p => p.Role == PlayerRole.Sheriff).Id,
+                CardsOut = [.. player.CardsInPlay],
+                DeckMemory = Deck.DeckMemory.ToArray(),
+                AvanableActions = actions,
+                CardFromId = source?.Id ?? -1,
+                ReactingToCard = cause,
+                Decision = decision
+            };
+        }
+
+        private Card? ChooseResponse(Player player, Player? source, Card cause, List<Player> alive,
+            DecisionKind decision, IEnumerable<Card> options, int target)
+        {
+            var actions = options.Select(c => new Action { PlayedCard = c, PotencialTargets = [target] }).ToList();
+            actions.Add(new Action { PlayedCard = null, PotencialTargets = [-1] });
+            var reply = player.Agent.Step(CreateInfo(player, alive, actions, cause, source, decision));
+            return reply?.PlayedCard != null && reply.target == target &&
+                actions.Any(a => a.PlayedCard == reply.PlayedCard) ? reply.PlayedCard : null;
+        }
+
+        private bool Defended(Player player, Player source, Card cause, List<Player> alive)
+        {
+            bool dodge = cause.Type is CardBangType.Bang or CardBangType.Gatling;
+            if (dodge && player.HasBarrel())
+            {
+                var drawn = Deck.DrawCard();
+                Deck.DiscardCard(drawn, -1, -1);
+                if (drawn.Suit == CardSuit.Hearts) return true;
+            }
+            var answer = dodge ? CardBangType.Missed : CardBangType.Bang;
+            var choice = ChooseResponse(player, source, cause, alive, DecisionKind.Defend,
+                player.Hand.Where(c => c.Type == answer), source.Id);
+            if (choice == null) return false;
+            player.Hand.Remove(choice);
+            Deck.DiscardCard(choice, player.Id, -1);
+            return true;
+        }
+
+        private void ApplyDamage(Player player, int damage, Player? killer, Card cause,
+            List<Player> alive, int participants)
+        {
+            player.LifePoints -= damage;
+            while (player.LifePoints <= 0 && participants > 2)
+            {
+                var beer = ChooseResponse(player, killer, cause, alive, DecisionKind.SaveLife,
+                    player.Hand.Where(c => c.Type == CardBangType.Beer), -1);
+                if (beer == null) break;
+                player.Hand.Remove(beer);
+                Deck.DiscardCard(beer, player.Id, -1);
+                player.LifePoints++;
+            }
+            if (player.LifePoints > 0) return;
+            player.LifePoints = 0;
+            alive.Remove(player);
+            DiscardAll(player);
+            if (killer == null) return;
+            if (player.Role == PlayerRole.Bandit)
+            {
+                for (int i = 0; i < 3; i++) killer.Hand.Add(Deck.DrawCard());
+            }
+            else if (killer.Role == PlayerRole.Sheriff && player.Role == PlayerRole.Deputy)
+                DiscardAll(killer);
+        }
+
+        private static void AdvanceToNextLivingPlayer(ref int playerIndex, List<Player> alivePlayers, Player player)
+        {
+            int currentIndex = alivePlayers.FindIndex(candidate => candidate.Id == player.Id);
+            playerIndex = currentIndex >= 0
+                ? (currentIndex + 1) % alivePlayers.Count
+                : playerIndex % alivePlayers.Count;
         }
 
         private int[] GetAllPlayersButMe(int playerIndex, List<Player> alivePlayers, bool hasCards = false)
@@ -722,7 +631,7 @@ namespace BangSimulatorLib.Game
                     break;
                 else if (hasCards && alivePlayers[targetIndex].Hand.Count == 0)
                     continue;
-                
+
                 result.Add(alivePlayers[targetIndex].Id);
             }
 
@@ -735,7 +644,7 @@ namespace BangSimulatorLib.Game
                     break;
                 else if (alivePlayers[targetIndex].HasMustang() && i == range)
                     break;
-                else if (result.Contains(targetIndex))
+                else if (result.Contains(alivePlayers[targetIndex].Id))
                     break;
                 else if (hasCards && alivePlayers[targetIndex].Hand.Count == 0)
                     continue;
@@ -746,10 +655,12 @@ namespace BangSimulatorLib.Game
             return result.ToArray();
         }
 
-        private void PlayerDied(Player player)
+        private void DiscardAll(Player player)
         {
             player.Hand.ForEach(c => Deck.DiscardCard(c, -1, -1));
             player.CardsInPlay.ForEach(c => Deck.DiscardCard(c, -1, -1));
+            player.Hand.Clear();
+            player.CardsInPlay.Clear();
         }
 
         private GameResoult? CheckForWin(List<Player> alivePlayers)
@@ -761,7 +672,7 @@ namespace BangSimulatorLib.Game
 
             for (int i = 0; i < alivePlayers.Count; i++)
             {
-                switch(alivePlayers[i].Role)
+                switch (alivePlayers[i].Role)
                 {
                     case PlayerRole.Bandit:
                         bandits.Add(alivePlayers[i]);
@@ -778,16 +689,27 @@ namespace BangSimulatorLib.Game
                 }
             }
 
-            if (scheriff == null && bandits.Count > 0)
+            // A dead sheriff always ends the game.  The renegade wins only when
+            // they are the sole survivor; in every other case the bandit side
+            // wins.  This also prevents a deputy-only game from continuing.
+            if (scheriff == null)
             {
+                if (bandits.Count == 0 && deputys.Count == 0 && renegad != null)
+                {
+                    return new GameResoult
+                    {
+                        WinningRole = PlayerRole.Renegade,
+                        WinningPlayers = [renegad]
+                    };
+                }
+
                 return new GameResoult
                 {
                     WinningRole = PlayerRole.Bandit,
                     WinningPlayers = [.. bandits]
                 };
-                
             }
-            else if (bandits.Count == 0 && renegad == null)
+            else if (scheriff != null && bandits.Count == 0 && renegad == null)
             {
                 return new GameResoult
                 {
@@ -795,18 +717,9 @@ namespace BangSimulatorLib.Game
                     WinningPlayers = [scheriff!, .. deputys]
                 };
             }
-            else if (scheriff == null && bandits.Count == 0 && deputys.Count == 0 && renegad != null)
-            {
-                return new GameResoult
-                {
-                    WinningRole = PlayerRole.Renegade,
-                    WinningPlayers = [renegad]
-                };
-            }
-
             return null;
         }
-    
+
         private Player GetPlayerById(int id)
         {
             return Players.First(p => p.Id == id);

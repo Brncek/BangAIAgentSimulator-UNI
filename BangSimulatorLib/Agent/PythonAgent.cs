@@ -19,11 +19,7 @@ namespace BangSimulatorLib.Agent
 
         private int pythonAgentID;
 
-        private bool useMemory = false;
-        private bool disposed = true;
-
-        public PythonAgent(Action<string> terminalPrint, bool openPythonWindow, int pythonAgentID = 0,
-            string pythonExecutable = "python", bool asynchronousPipe = false)
+        public PythonAgent(Action<string> terminalPrint, bool openPythonWindow, int pythonAgentID = 0)
         {
             var configuration = new ConfigurationBuilder()
                 .SetBasePath(Directory.GetCurrentDirectory())
@@ -164,7 +160,7 @@ namespace BangSimulatorLib.Agent
                 cardsOutArray[i] = (int)cardsOut[i].Type;
             }
 
-            var embeded = gameInfo.Encode(useMemory);
+            var embeded = gameInfo.Encode();
 
             var agentRequest = new PythonAgentRequest(pythonAgentID)
             {
@@ -369,10 +365,7 @@ namespace BangSimulatorLib.Agent
             if (ReceveData().Error is { } error)
                 throw new InvalidDataException($"Could not load {path}. {error}");
         }
-        public void SetUseMemory(bool use)
-        {
-            useMemory = use;
-        }
+  
     }
 
 

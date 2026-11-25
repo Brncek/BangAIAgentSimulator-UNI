@@ -68,8 +68,8 @@ class RolloutBuffer:
 
     def add(self, obs, action, log_prob, value, reward, done, mask):
 
-        if (self.pos == BUFFER_SIZE):
-            self.pos = 0
+        if self.is_ready():
+            raise RuntimeError("Update the full PPO buffer before adding a transition.")
 
         self.obs[self.pos]       = obs
         self.actions[self.pos]   = action
@@ -89,11 +89,15 @@ class RolloutBuffer:
 
 # ── GAE ───────────────────────────────────────────────────────────────────────
 
-def compute_gae(rewards, values, dones):
+def compute_gae(rewards, values, dones, bootstrap_value, cutoffs=None):
     advantages = np.zeros_like(rewards)
     last_gae   = 0.0
-    next_val   = 0.0
+    next_val   = bootstrap_value
     for t in reversed(range(len(rewards))):
+        # Interrupted training fragments may share a batch but not a GAE trace.
+        if cutoffs and t in cutoffs:
+            next_val = cutoffs[t]
+            last_gae = 0.0
         nonterminal   = 1.0 - dones[t]
         delta         = rewards[t] + GAMMA * next_val * nonterminal - values[t]
         last_gae      = delta + GAMMA * LAM * nonterminal * last_gae
@@ -115,6 +119,7 @@ class pyAgent:
 
         # Pending transition: committed at the start of the NEXT Step()
         self._pending = None   # (obs, action, log_prob, value, mask)
+        self._cutoffs = {}     # buffer index -> V(successor) at an interruption
 
         self._my_role      = -1
         self._is_eval      = False
@@ -156,12 +161,18 @@ class pyAgent:
             self._init_network(obs_dim=len(obs), n_actions=len(mask))
 
         # Commit the PREVIOUS step as a non-terminal transition
-        if self._pending is not None:
+        if not self._is_eval and self._pending is not None:
             prev_obs, prev_action, prev_lp, prev_val, prev_mask = self._pending
             self._buffer.add(prev_obs, prev_action, prev_lp, prev_val,
                              reward=0.0, done=False, mask=prev_mask)
-            if self._buffer.is_ready() and not self._is_eval:
-                self._update()
+            self._pending = None
+            if self._buffer.is_ready():
+                # obs is the successor of the last buffered action. Evaluate it
+                # before updating, then select the new action with the new policy.
+                with torch.no_grad():
+                    _, next_value = self._policy(torch.from_numpy(obs).unsqueeze(0),
+                                                 torch.from_numpy(mask).unsqueeze(0))
+                self._update(bootstrap_value=next_value.item())
 
         # Ranking only needs the greedy action. Skip the critic and probability
         # distribution, which are used for training and reward tracking.
@@ -186,12 +197,8 @@ class pyAgent:
             else:
                 flat_action = int(dist.sample().item())
 
-            if self._buffer is not None:
                 log_prob = dist.log_prob(torch.tensor([flat_action]))
-
-        if self._buffer is not None:
-            self._pending = (obs, flat_action, float(log_prob.item()),
-                             float(value.item()), mask)
+                self._pending = (obs, flat_action, log_prob.item(), value.item(), mask)
 
         # Return MaskedActionIndex (index 2) so C# calls GameInfo.DecodeAction()
         # Format expected by PythonAgentResponse: [Type, TargetId, MaskedActionIndex, Rewards]
@@ -199,7 +206,7 @@ class pyAgent:
         return [0, 0, flat_action, [0.0]]
 
     def GameOver(self, winningRole: int):
-        if self._pending is None:
+        if self._my_role == -1:
             return
 
         my_team_won = (
@@ -209,14 +216,15 @@ class pyAgent:
         )
         reward = 1.0 if my_team_won else -1.0
         self._rewards.append(reward)
+        self._my_role = -1
 
-        prev_obs, prev_action, prev_lp, prev_val, prev_mask = self._pending
-        self._buffer.add(prev_obs, prev_action, prev_lp, prev_val,
-                         reward=reward, done=True, mask=prev_mask)
-        self._pending = None
-
-        if self._buffer is not None and self._buffer.is_ready() and not self._is_eval:
-            self._update()
+        if not self._is_eval and self._pending is not None:
+            prev_obs, prev_action, prev_lp, prev_val, prev_mask = self._pending
+            self._buffer.add(prev_obs, prev_action, prev_lp, prev_val,
+                             reward=reward, done=True, mask=prev_mask)
+            self._pending = None
+            if self._buffer.is_ready():
+                self._update(bootstrap_value=0.0)
 
         # Auto-save: only when save path was set and rolling avg improved
         if self._save_path:
@@ -225,22 +233,37 @@ class pyAgent:
             if avg > self._last_reward_avg:
                 self._last_reward_avg = avg
                 try:
+                    print(f"[PPO] autosaved model to {self._save_path}")
                     torch.save(self._policy.state_dict(), self._save_path)
                 except Exception:
-                    pass
+                    print(f"[PPO] autosaved model Failed to {self._save_path}")
+
+    def _interrupt_rollout(self):
+        # The pending state's value is the successor value of the last committed
+        # transition. Keep it if training resumes in a different trajectory.
+        if self._pending is not None and self._buffer.pos:
+            last = self._buffer.pos - 1
+            if not self._buffer.dones[last]:
+                self._cutoffs.setdefault(last, self._pending[3])
+        self._pending = None
 
     def Reset(self):
-        self._pending = None
+        self._interrupt_rollout()
+        self._my_role = -1
 
     def Rewards(self) -> list:
         return self._rewards if self._rewards else [0.0]
 
     def SetEval(self, isEval: bool):
+        if isEval and not self._is_eval:
+            self._interrupt_rollout()
         self._is_eval = isEval
 
     def Save(self, path: str):
+        if not path or self._save_path == path:
+            return
         self._save_path = path
-        if self._policy is not None:
+        if self._policy is not None: 
             try:
                 torch.save(self._policy.state_dict(), path)
                 print(f"[PPO] saved model to {path}")
@@ -264,10 +287,12 @@ class pyAgent:
         self._is_eval = True
         self._pending = None
         self._buffer = None
+        self._cutoffs.clear()
+        self._my_role = -1
 
     # ── PPO update ────────────────────────────────────────────────────────────
 
-    def _update(self):
+    def _update(self, bootstrap_value):
         n = self._buffer.pos
 
         obs_np     = self._buffer.obs[:n]
@@ -278,7 +303,8 @@ class pyAgent:
         dones_np   = self._buffer.dones[:n]
         masks_np   = self._buffer.masks[:n]
 
-        advantages, returns = compute_gae(rewards_np, values_np, dones_np)
+        advantages, returns = compute_gae(rewards_np, values_np, dones_np,
+                                          bootstrap_value, self._cutoffs)
         advantages = (advantages - advantages.mean()) / (advantages.std() + 1e-8)
 
         obs_t     = torch.FloatTensor(obs_np)
@@ -320,3 +346,4 @@ class pyAgent:
                   f"mean_reward={rewards_np.sum() / max(dones_np.sum(), 1):.3f}")
 
         self._buffer.reset()
+        self._cutoffs.clear()

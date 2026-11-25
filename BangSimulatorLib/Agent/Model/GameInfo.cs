@@ -2,6 +2,8 @@
 
 namespace BangSimulatorLib.Agent.Model
 {
+    public enum DecisionKind { Turn, Defend, SaveLife, StorePick }
+
     public class GameInfo
     {
         public PlayerRole PlayerRole { get; set; }
@@ -12,7 +14,16 @@ namespace BangSimulatorLib.Agent.Model
 
         public int PlayerHelth { get; set; } = 0;
 
-        public List<Action> AvanableActions {  get; set; } = []; 
+        // Indexed by seat id. A role becomes public only after elimination.
+        public PlayerRole?[] DeadPlayerRoles { get; set; } = [];
+        public DecisionKind Decision { get; set; }
+
+        // -1 also applies to damage without an attacker (Dynamite).
+        public int CardFromId { get; set; } = -1;
+
+        public Card? ReactingToCard { get; set; }
+
+        public List<Action> AvanableActions { get; set; } = [];
 
         public List<Card> CardsOut { get; set; } = [];
 
@@ -23,15 +34,28 @@ namespace BangSimulatorLib.Agent.Model
         public int EndTurnIndex => ActionSpaceSize - 1;
 
 
-        public (float[] State, float[] Mask) Encode(bool includeMemory)
+        public (float[] State, float[] Mask) Encode()
         {
             List<float> features = [];
 
             features.AddRange(OneHot((int)PlayerRole, 0, Enum.GetValues(typeof(PlayerRole)).Length - 1));
             features.AddRange(GamePlayerLifes.Select(l => (float)l));
 
-            features.AddRange(OneHot(ScherifId, 0, GamePlayerLifes.Length - 1)); 
-            
+            features.AddRange(OneHot(ScherifId, 0, GamePlayerLifes.Length - 1));
+
+            //---REACTION CONTEXT
+            // The source id and card type tell an agent who initiated an
+            // interaction and what it is responding to (for example, a Duel).
+            int playerCount = GamePlayerLifes.Length;
+            int cardTypeCount = Enum.GetValues(typeof(CardBangType)).Length;
+
+            features.AddRange(OneHot(CardFromId, -1, playerCount - 1));
+            features.Add(ReactingToCard != null ? 1f : 0f);
+            features.AddRange(OneHot(
+                ReactingToCard == null ? -1 : (int)ReactingToCard.Type,
+                0,
+                cardTypeCount - 1));
+
             //---CARDSOUT
 
             float[] cardsOut = Enumerable.Repeat(0f, 10).ToArray();
@@ -45,27 +69,28 @@ namespace BangSimulatorLib.Agent.Model
 
             //---DECK MEMORY
 
-            if (includeMemory)
+            int memoryLimit = Math.Max(0, Deck.MemLimit);
+
+            if (memoryLimit > 0)
             {
+                int memorySize = Math.Clamp(Deck.MemSize, 0, memoryLimit);
 
-                int memorySize = Math.Max(0, Deck.MemSize);
-                int playerCount = GamePlayerLifes.Length;
-
-                int cardTypeCount = Enum.GetValues(typeof(CardBangType)).Length;
                 int cardValueCount = Enum.GetValues(typeof(CardValue)).Length;
                 int cardSuitCount = Enum.GetValues(typeof(CardSuit)).Length;
 
                 int eventSize = 1 + cardTypeCount + playerCount
-                                  + NumTargets + cardValueCount + cardSuitCount;
+                                + NumTargets + cardValueCount + cardSuitCount;
 
-                var recentMemory = (this.DeckMemory ?? Array.Empty<DeckMemory>())
+                var recentMemory = (DeckMemory ?? Array.Empty<DeckMemory>())
                     .Where(m => m != null && m.plaied != null)
                     .TakeLast(memorySize)
                     .ToArray();
 
-                int padding = memorySize - recentMemory.Length;
+                // Always reserve MemLimit slots in the state.
+                // Events are right-aligned; unused slots remain all zero.
+                int padding = memoryLimit - recentMemory.Length;
 
-                for (int slot = 0; slot < memorySize; slot++)
+                for (int slot = 0; slot < memoryLimit; slot++)
                 {
                     if (slot < padding)
                     {
@@ -75,17 +100,22 @@ namespace BangSimulatorLib.Agent.Model
 
                     var item = recentMemory[slot - padding];
 
-                    features.Add(1f); 
+                    features.Add(1f); // This memory slot contains an event.
                     features.AddRange(OneHot((int)item.plaied.Type, 0, cardTypeCount - 1));
                     features.AddRange(OneHot(item.pId, 0, playerCount - 1));
-
                     features.AddRange(OneHot(item.targetId, -2, playerCount - 1));
-
                     features.AddRange(OneHot((int)item.plaied.Value, 0, cardValueCount - 1));
                     features.AddRange(OneHot((int)item.plaied.Suit, 0, cardSuitCount - 1));
                 }
             }
 
+            features.AddRange(OneHot((int)Decision, 0, Enum.GetValues<DecisionKind>().Length - 1));
+            int roleCount = Enum.GetValues<PlayerRole>().Length;
+            for (int seat = 0; seat < playerCount; seat++)
+            {
+                var role = seat < DeadPlayerRoles.Length ? DeadPlayerRoles[seat] : null;
+                features.AddRange(OneHot(role.HasValue ? (int)role.Value : -1, 0, roleCount - 1));
+            }
             return (features.ToArray(), BuildMask());
         }
 
@@ -105,7 +135,7 @@ namespace BangSimulatorLib.Agent.Model
                 foreach (var t in action.PotencialTargets)
                 {
                     int slot = TargetSlot(t);
-                    if (slot < 0 || slot >= NumTargets) continue; 
+                    if (slot < 0 || slot >= NumTargets) continue;
                     mask[ActionIndex(action.PlayedCard.Type, t)] = 1f;
                 }
             }

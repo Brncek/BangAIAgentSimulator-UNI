@@ -46,6 +46,8 @@ namespace BangSimulatorGui
         private List<ISavableGraph> savableGraphs = [];
         private RankingWindow? rankingWindow;
 
+        private SimulatorSettings settings = new();
+
         public MainWindow()
         {
             InitializeComponent();
@@ -107,10 +109,8 @@ namespace BangSimulatorGui
         private void Start_Click(object sender, RoutedEventArgs e)
         {
             List<Player?> players = [];
-            int roundsCount = 0;
-            int avgLen = 0;
 
-            if (!LoadDataToRun(ref players, ref roundsCount, ref avgLen, false)) { return; }
+            if (!LoadDataFromFormular() || !LoadPlayers(ref players, false)) { return; }
 
             Start_BT.Visibility = Visibility.Collapsed;
             Stepping_BT.Visibility = Visibility.Collapsed;
@@ -119,21 +119,28 @@ namespace BangSimulatorGui
             Continue_BT.IsEnabled = false;
             agentSettings.ForEach(a => a.DisableEdit(false,false) );
 
-            SetProgress(0, roundsCount);
+            SetProgress(0, settings.Rounds);
 
             lastGame = new GameEngine(players.ToArray()!);
             lastResults = [];
 
-            RunGames(roundsCount, avgLen);
+            var agentsSetInfo = GetPlayerSettings();
+
+            Action saveA = () =>
+            {
+                for(int i = 0; i < players.Count(); i++)
+                {
+                    players[i]!.Agent.SetAutoSavePath(agentsSetInfo[i].SavePath);
+                }
+            };
+
+            RunGames(settings.Rounds, settings.AvgLen, saveA);
         }
 
         private void Continue_Click(object sender, RoutedEventArgs e)
         {
-            List<Player?> players = [];
-            int roundsCount = 0;
-            int avgLen = 0;
 
-            if (!LoadDataToRun(ref players, ref roundsCount, ref avgLen, false)) { return; }
+            if (!LoadDataFromFormular()) { return; }
 
             inWait = false;
             Stop_BT.IsEnabled = true;
@@ -141,18 +148,17 @@ namespace BangSimulatorGui
             agentSettings.ForEach(a => a.DisableEdit(false, false));
 
             var agents = lastGame!.Players.Select(p => p.Agent).ToArray();
-            var evals = agentSettings.Select(a => a.IsEval()).ToArray();
-            var savePaths = agentSettings.Select(a => a.SaveLocation()).ToArray();
+            var agentsSetInfo = GetPlayerSettings();
 
             for (int i  = 0; i < agents.Count(); i++)
             {
-                agents[i].SetEval(evals[i]);
-                agents[i].SetAutoSavePath(savePaths[i]);
+                agents[i].SetEval(agentsSetInfo[i].EvalMode);
+                agents[i].SetAutoSavePath(agentsSetInfo[i].SavePath);
             }
 
-            SetProgress(lastResults.Count, roundsCount + lastResults.Count);
+            SetProgress(lastResults.Count, settings.Rounds + lastResults.Count);
 
-            RunGames(roundsCount, avgLen);
+            RunGames(settings.Rounds, settings.AvgLen);
         }
 
 
@@ -252,15 +258,8 @@ namespace BangSimulatorGui
             }));
         }
 
-        private bool LoadDataToRun(ref List<Player?> players, ref int roundsCount, ref int avgLen, bool stepping)
+        private bool LoadDataFromFormular()
         {
-            profileIngMog = ProfileSimulatorCheck.IsChecked!.Value;
-
-            Action<string> terminalPrint = (s) =>
-            {
-                WriteLnToTerminal(s);
-            };
-
             if (!int.TryParse(MemSizeBox.Text, out var memSize))
             {
                 MessageBox.Show("Memory size has to be number", "WARNING", MessageBoxButton.OK, MessageBoxImage.Warning);
@@ -270,19 +269,35 @@ namespace BangSimulatorGui
             if (memSize <= 0)
             {
                 memSize = 0;
+                MemSizeBox.Text = "0";
             }
+
+            settings.MemSize = memSize;
 
             bool useMemory = memSize > 0;
 
-            players = agentSettings.Select(m => m.GetSelectedPlayer(profileIngMog, stepping, useMemory, terminalPrint)).Where(s => s != null).ToList();
 
-            if (players.Count <= 2)
+            if (!int.TryParse(MemLimitBox.Text, out var memLimit))
             {
-                MessageBox.Show("Minimum player count is 3", "WARNING", MessageBoxButton.OK, MessageBoxImage.Warning);
+                MessageBox.Show("Memory limit has to be number", "WARNING", MessageBoxButton.OK, MessageBoxImage.Warning);
                 return false;
             }
 
-            if (!int.TryParse(RoundsCountBox.Text, out roundsCount))
+            if (memLimit <= 0)
+            {
+                memLimit = 0;
+                MemLimitBox.Text = "0";
+            }
+
+            settings.MemLimit = memLimit;
+
+            if (memLimit < memSize)
+            {
+                MessageBox.Show("Memory limit has to bigger or equal as memory size", "WARNING", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return false;
+            }
+
+            if (!int.TryParse(RoundsCountBox.Text, out var roundsCount))
             {
                 MessageBox.Show("Round count has to be number", "WARNING", MessageBoxButton.OK, MessageBoxImage.Warning);
                 return false;
@@ -294,10 +309,9 @@ namespace BangSimulatorGui
                 return false;
             }
 
+            settings.Rounds = roundsCount;
 
-            
-
-            Deck.SetDeckMemory(memSize);
+            Deck.SetDeckMemory(memSize, memLimit);
 
             if (!int.TryParse(RndSeedBox.Text, out var rndSeed))
             {
@@ -311,9 +325,11 @@ namespace BangSimulatorGui
                 return false;
             }
 
+            settings.RndSeed = rndSeed;
+
             GlobalRnd.SetSeed(rndSeed);
 
-            if (!int.TryParse(AVGLenBox.Text, out avgLen))
+            if (!int.TryParse(AVGLenBox.Text, out var avgLen))
             {
                 MessageBox.Show("AVG len has to be number", "WARNING", MessageBoxButton.OK, MessageBoxImage.Warning);
                 return false;
@@ -325,10 +341,44 @@ namespace BangSimulatorGui
                 return false;
             }
 
+            settings.AvgLen = avgLen;
+
             return true;
         }
 
-        private void RunGames(int roundsCount, int avgLen)
+        private bool LoadPlayers(ref List<Player?> players, bool stepping)
+        {
+            profileIngMog = ProfileSimulatorCheck.IsChecked!.Value;
+
+            Action<string> terminalPrint = (s) =>
+            {
+                WriteLnToTerminal(s);
+            };
+
+            try
+            {
+                players = agentSettings.Select(m => m.GetSelectedPlayer(profileIngMog, stepping, terminalPrint)).Where(s => s != null).ToList();
+            }
+            catch (Exception e)
+            {
+                WriteLnToTerminal(e.ToString());
+            }
+
+            if (players.Count <= 2)
+            {
+                MessageBox.Show("Minimum player count is 3", "WARNING", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return false;
+            }
+
+            return true;
+        }
+
+        private List<SimulatorSettingsPlayer> GetPlayerSettings()
+        {
+            return agentSettings.Select(a => a.GetSettings()).ToList();
+        }
+
+        private void RunGames(int roundsCount, int avgLen, Action? SetSaveAgents = null)
         {
             stopSim = false;
 
@@ -336,84 +386,106 @@ namespace BangSimulatorGui
 
             simThread = new Thread(() =>
             {
-                var stopWatch = new Stopwatch();
-
-
                 try
                 {
-                    stopWatch.Start();
 
-                    for (int i = 0; i < roundsCount; i++)
+                    var stopWatch = new Stopwatch();
+
+
+                    try
                     {
-                        lastResults.Add(lastGame!.Play());
+                        stopWatch.Start();
 
-                        SetProgress(i + 1 + runnedBeforeCount, roundsCount + runnedBeforeCount);
-
-                        stopSimMutex.WaitOne();
-                        if (stopSim)
+                        for (int i = 0; i < roundsCount; i++)
                         {
-                            i = roundsCount;
+                            lastResults.Add(lastGame!.Play());
+
+                            SetProgress(i + 1 + runnedBeforeCount, roundsCount + runnedBeforeCount);
+
+                            stopSimMutex.WaitOne();
+                            if (stopSim)
+                            {
+                                i = roundsCount;
+                            }
+                            stopSimMutex.ReleaseMutex();
+
+                            if (i == 0)
+                            {
+                                SetSaveAgents?.Invoke();
+                            }
                         }
-                        stopSimMutex.ReleaseMutex();
+
+                        stopWatch.Stop();
+                    }
+                    catch (Exception e)
+                    {
+                        WriteLnToTerminal(e.ToString());
+
+                        App.Current.Dispatcher.Invoke(new Action(() =>
+                        {
+                            DoneActions();
+                            WriteLnToTerminal("=-=-=-=-=-=-=-=-=-=-=-=-=");
+                        }));
+
+                        return;
                     }
 
-                    stopWatch.Stop();
-                }
-                catch (Exception e)
-                {
-                    WriteLnToTerminal(e.Message);
+                    long elapsedTicks = stopWatch.ElapsedTicks;
+
+                    var winResoults = StatisticsEngine.WinsEval(lastResults);
+
+
+                    WriteLnToTerminal($"Sheriff wins: {winResoults.SherifWins:F2}%");
+                    WriteLnToTerminal($"Bandits wins: {winResoults.BanditWins:F2}%");
+                    WriteLnToTerminal($"Renegade wins: {winResoults.RenegadeWins:F2}%");
+
+                    var timespan = new TimeSpan(elapsedTicks);
+
+                    WriteLnToTerminal($"Time elapsed {timespan.ToString(@"hh\:mm\:ss")}");
+
+                    if (profileIngMog)
+                    {
+                        long tickSum = 0;
+
+                        foreach (var p in lastGame!.Players)
+                        {
+                            if (p.Agent is AgentProfiller profiler)
+                            {
+                                tickSum += profiler.GetProfiledTicks();
+                            }
+                        }
+
+                        var totalAgentTime = new TimeSpan(tickSum);
+
+                        WriteLnToTerminal($"Agent Time elapsed {totalAgentTime.ToString(@"hh\:mm\:ss")}");
+
+                        double agentPercentageOfWhole = tickSum / (double)elapsedTicks * 100;
+
+                        WriteLnToTerminal($"Agent % of the time {agentPercentageOfWhole:F3}");
+                    }
 
                     App.Current.Dispatcher.Invoke(new Action(() =>
                     {
+                        StatisticInfo(lastResults, avgLen);
                         DoneActions();
+
                         WriteLnToTerminal("=-=-=-=-=-=-=-=-=-=-=-=-=");
+
                     }));
-
-                    return;
                 }
-
-                long elapsedTicks = stopWatch.ElapsedTicks;
-
-                var winResoults = StatisticsEngine.WinsEval(lastResults);
-
-
-                WriteLnToTerminal($"Sheriff wins: {winResoults.SherifWins:F2}%");
-                WriteLnToTerminal($"Bandits wins: {winResoults.BanditWins:F2}%");
-                WriteLnToTerminal($"Renegade wins: {winResoults.RenegadeWins:F2}%");
-
-                var timespan = new TimeSpan(elapsedTicks);
-
-                WriteLnToTerminal($"Time elapsed {timespan.ToString(@"hh\:mm\:ss")}");
-
-                if (profileIngMog)
+                catch (Exception e)
                 {
-                    long tickSum = 0;
-
-                    foreach (var p in lastGame!.Players)
+                    App.Current.Dispatcher.Invoke(new Action(() =>
                     {
-                        if (p.Agent is AgentProfiller profiler)
-                        {
-                            tickSum += profiler.GetProfiledTicks();
-                        }
-                    }
+                        WriteLnToTerminal(e.ToString());
 
-                    var totalAgentTime = new TimeSpan(tickSum);
+                        WriteLnToTerminal("=-=-=-=-=-=-=-=-=-=-=-=-=");
 
-                    WriteLnToTerminal($"Agent Time elapsed {totalAgentTime.ToString(@"hh\:mm\:ss")}");
-
-                    double agentPercentageOfWhole = tickSum / (double)elapsedTicks * 100;
-
-                    WriteLnToTerminal($"Agent % of the time {agentPercentageOfWhole:F3}");
+                    }));
+                    
                 }
+                
 
-                App.Current.Dispatcher.Invoke(new Action(() =>
-                {
-                    StatisticInfo(lastResults, avgLen);
-                    DoneActions();
-
-                    WriteLnToTerminal("=-=-=-=-=-=-=-=-=-=-=-=-=");
-
-                }));
             });
 
             simThread.Start();
@@ -614,11 +686,11 @@ namespace BangSimulatorGui
             {
                 var dialog = new SaveFileDialog
                 {
-                    Title = "Save Chart",
+                    Title = "Save Data",
                     Filter = "JSON file (*.json)|*.json",
                     DefaultExt = ".json",
                     AddExtension = true,
-                    FileName = "resoult.json"
+                    FileName = "data.json"
                 };
 
                 if (dialog.ShowDialog() != true)
@@ -636,6 +708,82 @@ namespace BangSimulatorGui
 
                 File.WriteAllText(dialog.FileName, last_json);
                 
+            }
+        }
+
+        private void Export_Click(object sender, RoutedEventArgs e)
+        {
+            var dialog = new SaveFileDialog
+            {
+                Title = "",
+                Filter = "JSON file (*.json)|*.json",
+                DefaultExt = ".json",
+                AddExtension = true,
+                FileName = "simSettings.json"
+            };
+
+            if (dialog.ShowDialog() != true)
+            {
+                return;
+            }
+
+            LoadDataFromFormular();
+
+            settings.Players = GetPlayerSettings();
+
+            var jtext = JsonSerializer.Serialize(settings, options: new()
+            {
+                WriteIndented = true
+            });
+
+            settings.Players = [];
+
+            File.WriteAllText(dialog.FileName, jtext);
+        }
+
+        private void Import_Click(object sender, RoutedEventArgs e)
+        {
+            var dialog = new OpenFileDialog
+            {
+                Title = "",
+                Filter = "JSON file (*.json)|*.json",
+                DefaultExt = ".json"
+            };
+
+            if (dialog.ShowDialog() != true)
+            {
+                return;
+            }
+
+            try
+            {
+                var text = File.ReadAllText(dialog.FileName);
+                var settingsLoaded = JsonSerializer.Deserialize<SimulatorSettings>(text);
+                
+                if (settingsLoaded is null || settingsLoaded.Players.Count() == 0)
+                {
+                    MessageBox.Show("Unable to deserialize file", "WARNING", MessageBoxButton.OK, MessageBoxImage.Warning);
+                    return;
+                }
+
+                settings = settingsLoaded;
+
+                RoundsCountBox.Text = $"{settings.Rounds}";
+                MemSizeBox.Text = $"{settings.MemSize}";
+                MemLimitBox.Text = $"{settings.MemLimit}";
+                RndSeedBox.Text = $"{settings.RndSeed}";
+                AVGLenBox.Text = $"{settings.AvgLen}";
+
+                for(int i = 0; i < agentSettings.Count(); i++)
+                {
+                    agentSettings[i].LoadSettings(settings.Players[i]);
+                }
+
+                settings.Players = [];
+            }
+            catch
+            {
+                MessageBox.Show("Unable to load file", "WARNING", MessageBoxButton.OK, MessageBoxImage.Warning);
             }
         }
     }

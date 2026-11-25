@@ -10,7 +10,8 @@ namespace BangSimulatorGui.Model
         Scripted,
         Python,
         NetDQN,
-        Ollama
+        Ollama,
+        TurboScripted
     }
 
     public enum AgentRole
